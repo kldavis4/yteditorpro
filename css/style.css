@@ -1,0 +1,8 @@
+.promode_active {
+    background-color: rgb(255,100,100);
+}
+
+table.help td {
+    padding-bottom: 5px;
+    padding-right: 5px;
+}
