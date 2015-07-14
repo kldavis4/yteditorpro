@@ -20,4 +20,8 @@ Keys 1-6 are used for selecting the various editing tabs (Video, Audio, Photos, 
 
 ### Timeline navigation
 
-The 'P' key will scroll the timeline to the currently selected clip. This is convenient because often the timeline will automatically scroll to the start despite having a clip selected. The '[' and ']' keys allow scrolling to the start and end of the timeline. 
+The 'P' key will scroll the timeline to the currently selected clip. This is convenient because often the timeline will automatically scroll to the start despite having a clip selected. The '[' and ']' keys allow scrolling to the start and end of the timeline.
+
+### Sort photos
+
+When the Photos tab is open, the 'S' key will cause the current set of photos to be sorted alphabetically. This is useful when re-opening an existing project with photos causes them to be displayed out of order.
