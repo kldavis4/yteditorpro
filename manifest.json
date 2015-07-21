@@ -3,7 +3,7 @@
 
   "name": "Pro Mode for YouTube Video Editor",
   "description": "Enables various hotkeys to speed up and generally make YouTube's video editor more usable.",
-  "version": "0.1",
+  "version": "0.11",
   "short_name" : "YTEditorProMode",
   "icons": { "16": "icon16.png",
              "48": "icon48.png",
