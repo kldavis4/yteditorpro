@@ -2,9 +2,9 @@ var _gaq = _gaq || [];
 
 (function(){
     var UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // Update after 24 hours
-
     var active = true;
     var publishRequested = false;
+    var playing = false;
 
     _gaq.push(function() {
         _gaq.push(['_setAccount', 'UA-10393243-10']);
@@ -42,6 +42,24 @@ var _gaq = _gaq || [];
         x.open('GET', url);
         x.send();
     }
+    
+    function pausePlayback() {
+        if (typeof this.preview_swf == "undefined") {
+            player = jQuery("#preview-swf")[0];
+            if ((typeof player.getPlayerState) == "function") {
+                this.preview_swf = player;
+            }
+        }        
+        
+        if ((typeof this.preview_swf) == "object" &&
+            (typeof this.preview_swf.getPlayerState) == "function" &&
+            this.preview_swf.getPlayerState() == 1 &&
+            !playing) {
+            this.preview_swf.pauseVideo();
+        }
+    }
+
+    window.setInterval(pausePlayback, 500);
                         
     $("#publish-button").click(function(evt) {
         publishRequested = true; //Leaving the page to publish video
@@ -144,8 +162,10 @@ var _gaq = _gaq || [];
                     var player = jQuery("#preview-swf")[0];
 
                     if (player.getPlayerState() == 1) {
+                        playing = false;
                         player.pauseVideo();
                     } else {
+                        playing = true;
                         player.playVideo();
                     }
                 } else if ( event.which == 115 ) { //S - sort thumbnails
