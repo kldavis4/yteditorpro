@@ -5,18 +5,22 @@
   "description": "Enables various hotkeys to speed up and generally make YouTube's video editor more usable.",
   "version": "0.12",
   "short_name" : "YTEditorProMode",
-  "icons": { "16": "icon16.png",
-             "48": "icon48.png",
-             "128": "icon128.png" },
+  "icons": { "16": "images/icon16.png",
+             "48": "images/icon48.png",
+             "128": "images/icon128.png" },
   "permissions": [
 	"https://*.google-analytics.com/*", "storage"
   ],
   "content_scripts": [
     {
       "matches": ["*://*.youtube.com/editor*"],
-	  "css": ["css/style.css","css/bootstrap.css"],
-      "js": ["js/jquery-1.11.1.min.js","js/bootstrap.js","js/yteditorpro.js"]
+	  "css": ["css/jquery-ui.css","css/jquery-ui.structure.css","css/style.css","css/bootstrap.css"],
+      "js": ["js/jquery-1.11.1.min.js","js/jquery-ui.js","js/bootstrap.js","js/yteditorpro.js"]
     }
   ],
-  "web_accessible_resources": ["js/ga.js"]
+  "web_accessible_resources": [
+	"js/ga.js",
+	"images/*.png",
+	"images/jquery-ui/*.png"
+  ]
 }

@@ -6,3 +6,15 @@ table.help td {
     padding-bottom: 5px;
     padding-right: 5px;
 }
+
+.play-state-paused {
+    color: green;
+    font-style: italic;
+}
+
+.play-state-playing {
+    color: blue;
+    font-style: italic;
+}
+
+.ui-slider-horizontal .ui-state-default {background: white url("chrome-extension://__MSG_@@extension_id__/images/scrubhandle.png") no-repeat scroll 50% 50%;}

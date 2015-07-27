@@ -6,6 +6,10 @@ var _gaq = _gaq || [];
     var publishRequested = false;
     var playing = false;
     var clipSelectState = 0;
+    var userTimelineInteraction = false;
+    
+    var PAUSED_MESSAGE = "Paused (spacebar to play)";
+    var PLAYING_MESSAGE = "Playing (spacebar to pause)";
 
     _gaq.push(function() {
         _gaq.push(['_setAccount', 'UA-10393243-10']);
@@ -44,10 +48,13 @@ var _gaq = _gaq || [];
         x.send();
     }
     
-    function pausePlayback() {
+    function daemonLoop() {
+        if (!active) return;
+        
         if (typeof this.preview_swf == "undefined") {
             player = jQuery("#preview-swf")[0];
-            if ((typeof player.getPlayerState) == "function") {
+            if ((typeof player == "object") && 
+               ((typeof player.getPlayerState) == "function")) {
                 this.preview_swf = player;
             }
         }        
@@ -58,9 +65,19 @@ var _gaq = _gaq || [];
             !playing) {
             this.preview_swf.pauseVideo();
         }
+        
+        //Maintain current timeline position using the pro mode scrubber
+        if ( !playing ) {
+            var sliderValue = jQuery("#timeline-scrubber").slider('value');
+            var timelineWidth = jQuery(".editor-timeline")[0].scrollWidth - jQuery(".editor-timeline")[0].clientWidth;
+            var newScroll = Math.round((timelineWidth*sliderValue)/100);
+            if ( jQuery(".editor-timeline").scrollLeft() != newScroll) {
+                jQuery(".editor-timeline").scrollLeft(newScroll);
+            }
+        }
     }
 
-    window.setInterval(pausePlayback, 500);
+    window.setInterval(daemonLoop, 500);
                         
     $("#publish-button").click(function(evt) {
         publishRequested = true; //Leaving the page to publish video
@@ -85,8 +102,10 @@ var _gaq = _gaq || [];
 
         if ( active ) {
             jQuery("#page").addClass('promode_active');
+            jQuery("#timeline-scrubber").show();
         } else {
             jQuery("#page").removeClass('promode_active');
+            jQuery("#timeline-scrubber").hide();
         }
     }
     
@@ -102,6 +121,62 @@ var _gaq = _gaq || [];
     jQuery(".timeline-video-clip").click(function(evt){
         clipSelectState = 0; 
     });
+    
+    jQuery(".editor-timeline").scroll(function(evt){
+        if ( playing ) {
+            updateScrubber();
+        }
+    });
+
+    $(".editor-timeline").before("<br /><div id='timeline-scrubber'></div>");
+    $("#timeline-scrubber").slider({
+        min: 0, 
+        max: 100,
+        step: .01,
+        slide: handleScrub
+    });
+    
+    //Set size of the scrubber handler
+    $('.ui-slider-handle').height(30);
+    $('.ui-slider-handle').width(30);
+    
+    function handleScrub(evt, ui) {
+        var value = ui.value;
+        var timelineWidth = jQuery(".editor-timeline")[0].scrollWidth - jQuery(".editor-timeline")[0].clientWidth;
+        jQuery(".editor-timeline").scrollLeft(Math.round((timelineWidth*value)/100));
+    }
+        
+    function updateScrubber() {
+        var timelineScroll = jQuery(".editor-timeline").scrollLeft();
+        var timelineWidth = jQuery(".editor-timeline")[0].scrollWidth - jQuery(".editor-timeline")[0].clientWidth;
+        $("#timeline-scrubber").slider('value', Math.round(10000 * timelineScroll/timelineWidth)/100);
+    }
+    
+    $("#save-changes-message").after(" <span id='play-state-msg' class='play-state-paused'>" + PAUSED_MESSAGE + "</span>");
+    
+    //Handle scroll right / left with arrow keys
+    jQuery(document).keydown(function(evt){
+        if ( evt.which == 39 ) { //scrub right
+            var timelineWidth = jQuery(".editor-timeline")[0].scrollWidth - jQuery(".editor-timeline")[0].clientWidth;
+            var timelineScroll = jQuery(".editor-timeline").scrollLeft();
+            timelineScroll = timelineScroll + .1 * timelineWidth;
+            if ( timelineScroll > timelineWidth ) {
+                timelineScroll = timelineWidth;
+            }
+            jQuery(".editor-timeline").scrollLeft(timelineScroll);
+            updateScrubber();
+        } else if ( evt.which == 37 ) { //scrub left
+            var timelineWidth = jQuery(".editor-timeline")[0].scrollWidth - jQuery(".editor-timeline")[0].clientWidth;
+            var timelineScroll = jQuery(".editor-timeline").scrollLeft();
+            timelineScroll = timelineScroll - .1 * timelineWidth;
+            if ( timelineScroll < 0 ) {
+                timelineScroll = 0;
+            }
+            jQuery(".editor-timeline").scrollLeft(timelineScroll);
+            updateScrubber();
+        }
+    });
+
     
     //Modal Help Screen
     $("body").append('<div id="yteditorpro_help" class="modal fade">' +
@@ -123,12 +198,16 @@ var _gaq = _gaq || [];
                 '<tr><td>' + 'P</td><td>Scroll timeline to currently selected clip. Toggle start/end of clip by pressing repeatedly.' + '</td></tr>' +
                 '<tr><td>' + '[</td><td>Scroll timeline to first clip' + '</td></tr>' +
                 '<tr><td>' + ']</td><td>Scroll timeline to last clip' + '</td></tr>' +
+                '<tr><td>' + '.</td><td>Select next clip' + '</td></tr>' +
+                '<tr><td>' + ',</td><td>Select previous clip' + '</td></tr>' +
                 '<tr><td>' + '1</td><td>Video clip tab' + '</td></tr>' +
                 '<tr><td>' + '2</td><td>Copyright tab' + '</td></tr>' +
                 '<tr><td>' + '3</td><td>Photos tab' + '</td></tr>' +
                 '<tr><td>' + '4</td><td>Audio tab' + '</td></tr>' +
                 '<tr><td>' + '5</td><td>Transitions tab' + '</td></tr>' +
                 '<tr><td>' + '6</td><td>Text tab' + '</td></tr>' +
+                '<tr><td>' + 'Right arrow</td><td>Scroll timeline right' + '</td></tr>' +
+                '<tr><td>' + 'Left arrow</td><td>Scroll timeline left' + '</td></tr>' +
             '</table>' +
           '</div>' +
         '</div>' +
@@ -170,9 +249,17 @@ var _gaq = _gaq || [];
                     if (player.getPlayerState() == 1) {
                         playing = false;
                         player.pauseVideo();
+                        $("#timeline-scrubber").slider('enable');
+                        $("#play-state-msg").text(PAUSED_MESSAGE);
+                        $("#play-state-msg").toggleClass('play-state-paused');
+                        $("#play-state-msg").toggleClass('play-state-playing');
                     } else {
                         playing = true;
                         player.playVideo();
+                        $("#timeline-scrubber").slider('disable');
+                        $("#play-state-msg").text(PLAYING_MESSAGE);
+                        $("#play-state-msg").toggleClass('play-state-paused');
+                        $("#play-state-msg").toggleClass('play-state-playing');
                     }
                 } else if ( event.which == 115 ) { //S - sort thumbnails
                     _gaq.push(['_trackEvent', 'Hotkey', 'SortThumbnails']);
@@ -255,25 +342,57 @@ var _gaq = _gaq || [];
                     jQuery("#text-tab").click();
                 } else if ( event.which == 112 ) { //P - focus current clip
                     _gaq.push(['_trackEvent', 'Hotkey', 'FocusCurrent']);
+                    
                     var offset = jQuery(".timeline-video-clips").children(".selected").css('left');
-                    if ( clipSelectState == 0 ) {
-                        jQuery(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))));
-                        clipSelectState = 1;
-                    } else if ( clipSelectState == 1 ) {
-                        var width = jQuery(".timeline-video-clips").children(".selected").width();
-                        jQuery(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))) + width);
-                        clipSelectState = 0;
+                    if ( offset != undefined ) {
+                        if ( clipSelectState == 0 ) {
+                            //Scroll to start of clip
+                            jQuery(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))));
+                            clipSelectState = 1;
+                        } else if ( clipSelectState == 1 ) {
+                            //Scroll to end of clip
+                            var width = jQuery(".timeline-video-clips").children(".selected").width();
+                            jQuery(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))) + width);
+                            clipSelectState = 0;
+                        }
                     }
+                    updateScrubber();
                 } else if ( event.which == 91 ) { // [ - focus start
                     _gaq.push(['_trackEvent', 'Hotkey', 'FocusStart']);
                     jQuery(".editor-timeline").scrollLeft(0);
+                    updateScrubber();
                 } else if ( event.which == 93 ) { // ] - focus end
                     _gaq.push(['_trackEvent', 'Hotkey', 'FocusEnd']);
                     var offset = jQuery(".timeline-video-clips").children().last().css('left');
                     jQuery(".editor-timeline").scrollLeft(offset.substring(0,offset.lastIndexOf("px")));
+                    updateScrubber();
                 } else if ( event.which == 104 ) { // H - show help
                     _gaq.push(['_trackEvent', 'Hotkey', 'ToggleHelp']);
                     $("#yteditorpro_help").modal('toggle');
+                } else if ( event.which == 46 ) { // . - next clip in timeline
+                    _gaq.push(['_trackEvent', 'Hotkey', 'NextClip']);
+                    
+                    var nextClip = jQuery(".timeline-video-clips").children(".selected").next();
+                    
+                    if ( nextClip != undefined ) {
+                        nextClip.click();
+                        var offset = nextClip.css('left');
+                        jQuery(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))));
+                    }
+                    
+                    updateScrubber();
+                } else if ( event.which == 44 ) { // , - previous clip in timeline
+                    _gaq.push(['_trackEvent', 'Hotkey', 'PrevClip']);
+                    
+                    var prevClip = jQuery(".timeline-video-clips").children(".selected").prev();
+                    
+                    if ( prevClip != undefined ) {
+                        prevClip.click();
+                        var offset = prevClip.css('left');
+                        jQuery(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))));
+                    }
+                    
+                    updateScrubber();
                 }
             } 
         }
