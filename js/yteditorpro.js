@@ -5,6 +5,7 @@ var _gaq = _gaq || [];
     var active = true;
     var publishRequested = false;
     var playing = false;
+    var clipSelectState = 0;
 
     _gaq.push(function() {
         _gaq.push(['_setAccount', 'UA-10393243-10']);
@@ -97,6 +98,11 @@ var _gaq = _gaq || [];
         toggleActive();
     });
     
+    //Reset clip select state when clip is clicked
+    jQuery(".timeline-video-clip").click(function(evt){
+        clipSelectState = 0; 
+    });
+    
     //Modal Help Screen
     $("body").append('<div id="yteditorpro_help" class="modal fade">' +
       '<div class="modal-dialog">' +
@@ -114,7 +120,7 @@ var _gaq = _gaq || [];
                 '<tr><td>' + 'K</td><td>Toggle Pan / Zoom effect on currently selected clip' + '</td></tr>' +
                 '<tr><td>' + '+</td><td>Increase currently selected clip by 1 second' + '</td></tr>' +
                 '<tr><td>' + '-</td><td>Decrease currently selected clip by 1 second' + '</td></tr>' +
-                '<tr><td>' + 'P</td><td>Scroll timeline to currently selected clip' + '</td></tr>' +
+                '<tr><td>' + 'P</td><td>Scroll timeline to currently selected clip. Toggle start/end of clip by pressing repeatedly.' + '</td></tr>' +
                 '<tr><td>' + '[</td><td>Scroll timeline to first clip' + '</td></tr>' +
                 '<tr><td>' + ']</td><td>Scroll timeline to last clip' + '</td></tr>' +
                 '<tr><td>' + '1</td><td>Video clip tab' + '</td></tr>' +
@@ -250,7 +256,14 @@ var _gaq = _gaq || [];
                 } else if ( event.which == 112 ) { //P - focus current clip
                     _gaq.push(['_trackEvent', 'Hotkey', 'FocusCurrent']);
                     var offset = jQuery(".timeline-video-clips").children(".selected").css('left');
-                    jQuery(".editor-timeline").scrollLeft(offset.substring(0,offset.lastIndexOf("px")));
+                    if ( clipSelectState == 0 ) {
+                        jQuery(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))));
+                        clipSelectState = 1;
+                    } else if ( clipSelectState == 1 ) {
+                        var width = jQuery(".timeline-video-clips").children(".selected").width();
+                        jQuery(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))) + width);
+                        clipSelectState = 0;
+                    }
                 } else if ( event.which == 91 ) { // [ - focus start
                     _gaq.push(['_trackEvent', 'Hotkey', 'FocusStart']);
                     jQuery(".editor-timeline").scrollLeft(0);
