@@ -53,13 +53,15 @@ var _gaq = _gaq || [];
         
         if (typeof this.preview_swf == "undefined") {
             player = jQuery("#preview-swf")[0];
-            if ((typeof player == "object") && 
-               ((typeof player.getPlayerState) == "function")) {
+            var playerType = (typeof player);            
+            if ((playerType == "function" || playerType == "object") && 
+               (typeof player.getPlayerState == "function")) {
                 this.preview_swf = player;
             }
         }        
         
-        if ((typeof this.preview_swf) == "object" &&
+        var swfType = (typeof this.preview_swf);
+        if ((swfType == "function" || swfType == "object") &&
             (typeof this.preview_swf.getPlayerState) == "function" &&
             this.preview_swf.getPlayerState() == 1 &&
             !playing) {
