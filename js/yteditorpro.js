@@ -51,6 +51,70 @@ var _gaq = _gaq || [];
         x.send();
     }
 
+    //Event simulation
+    //http://stackoverflow.com/a/6158050/290918
+    //
+    function simulate(element, eventName)
+    {
+        var options = extend(defaultOptions, arguments[2] || {});
+        var oEvent, eventType = null;
+
+        for (var name in eventMatchers)
+        {
+            if (eventMatchers[name].test(eventName)) { eventType = name; break; }
+        }
+
+        if (!eventType)
+            throw new SyntaxError('Only HTMLEvents and MouseEvents interfaces are supported');
+
+        if (document.createEvent)
+        {
+            oEvent = document.createEvent(eventType);
+            if (eventType == 'HTMLEvents')
+            {
+                oEvent.initEvent(eventName, options.bubbles, options.cancelable);
+            }
+            else
+            {
+                oEvent.initMouseEvent(eventName, options.bubbles, options.cancelable, document.defaultView,
+                options.button, options.pointerX, options.pointerY, options.pointerX, options.pointerY,
+                options.ctrlKey, options.altKey, options.shiftKey, options.metaKey, options.button, element);
+            }
+            element.dispatchEvent(oEvent);
+        }
+        else
+        {
+            options.clientX = options.pointerX;
+            options.clientY = options.pointerY;
+            var evt = document.createEventObject();
+            oEvent = extend(evt, options);
+            element.fireEvent('on' + eventName, oEvent);
+        }
+        return element;
+    }
+
+    function extend(destination, source) {
+        for (var property in source)
+          destination[property] = source[property];
+        return destination;
+    }
+
+    var eventMatchers = {
+        'HTMLEvents': /^(?:load|unload|abort|error|select|change|submit|reset|focus|blur|resize|scroll)$/,
+        'MouseEvents': /^(?:click|dblclick|mouse(?:down|up|over|move|out))$/
+    }
+    var defaultOptions = {
+        pointerX: 0,
+        pointerY: 0,
+        button: 0,
+        ctrlKey: false,
+        altKey: false,
+        shiftKey: false,
+        metaKey: false,
+        bubbles: true,
+        cancelable: true
+    }
+
     //Receives for messages for swf player events
     window.addEventListener("message", function(event) {
         if (!active) return;
@@ -242,6 +306,21 @@ var _gaq = _gaq || [];
         self.working = working;
     }
 
+    function parseClipTime(time) {
+        var parts = time.split(":");
+        var mins = parts[0];
+        var secs = parts[1];
+        if (mins.length === 1) {
+            mins = "0" + mins;
+        }
+
+        if ( mins.length !== 2 && secs.length >= 2 ) {
+            throw new Error('Invalid clip time format: ' + time);
+        }
+
+        return Date.parse("01/01/01 00:" + mins + ":" + secs);
+    }
+
     $("#save-changes-message").after(" <span id='play-state-msg' class='play-state-paused'>" + PAUSED_MESSAGE + "</span>");
 
     //Handle scroll right / left with arrow keys
@@ -356,31 +435,40 @@ var _gaq = _gaq || [];
                 } else if ( event.which == 43) { //+ key increase by one second selected clip
                     _gaq.push(['_trackEvent', 'Hotkey', 'Increase1S']);
 
-                    if ( !self.working ) {
-                        var selectedClip = jQuery(".timeline-video-clips").children(".selected").first();
-                        if ( selectedClip ) {
-                            var n = selectedClip.find(".nudge-right");
-                            if ( n && n.length >= 2 ) {
-                                setWorking(true);
-                                for ( var i = 0; i < 15; i++ ) {
-                                    n[1].click();
+                    var handle = jQuery(".timeline-video-clips").children(".selected").find(".right-trimmer").find(".knurling-area");
+                    if ( handle && handle.length > 0 ) {
+                        var timeSpan = jQuery(".timeline-video-clips").children(".selected").find(".editor-thumb-time");
+                        if (timeSpan && timeSpan.length > 0) {
+                            var startTime = parseClipTime(timeSpan[0].textContent);
+                            var moveX = 0;
+                            simulate(handle[0], "mousedown", { pointerX: moveX, pointerY: 0 });
+                            while (true) {
+                                moveX += 1;
+                                simulate(handle[0], "mousemove", { pointerX: moveX, pointerY: 0 });
+                                if ((parseClipTime(timeSpan[0].textContent) - startTime)>= 1000 || moveX > 1000) {
+                                    break;
                                 }
                             }
+                            simulate(handle[0], "mouseup");
                         }
                     }
-
                 } else if ( event.which == 45) { //- key decrease by one second selected clip
                     _gaq.push(['_trackEvent', 'Hotkey', 'Decrease1S']);
-                    if ( !self.working ) {
-                        var selectedClip = jQuery(".timeline-video-clips").children(".selected").first();
-                        if ( selectedClip ) {
-                            var n = selectedClip.find(".nudge-left");
-                            if ( n && n.length >= 2 ) {
-                                setWorking(true);
-                                for ( var i = 0; i < 15; i++ ) {
-                                    n[1].click();
+                    var handle = jQuery(".timeline-video-clips").children(".selected").find(".right-trimmer").find(".knurling-area");
+                    if ( handle && handle.length > 0 ) {
+                        var timeSpan = jQuery(".timeline-video-clips").children(".selected").find(".editor-thumb-time");
+                        if (timeSpan && timeSpan.length > 0) {
+                            var startTime = parseClipTime(timeSpan[0].textContent);
+                            var moveX = 1000;
+                            simulate(handle[0], "mousedown", { pointerX: moveX, pointerY: 0 });
+                            while (true) {
+                                moveX -= 1;
+                                simulate(handle[0], "mousemove", { pointerX: moveX, pointerY: 0 });
+                                if ((startTime - parseClipTime(timeSpan[0].textContent)) >= 1000 || moveX <= 0) {
+                                    break;
                                 }
                             }
+                            simulate(handle[0], "mouseup");
                         }
                     }
                 } else if ( event.which == 49) { //1 - video tab
