@@ -6,8 +6,11 @@ var _gaq = _gaq || [];
     var publishRequested = false;
     var playing = false;
     var clipSelectState = 0;
-    var userTimelineInteraction = false;
-    
+    var initialized = false;
+    var duration = 0;
+    var working = false;
+    var self = this;
+
     var PAUSED_MESSAGE = "Paused (spacebar to play)";
     var PLAYING_MESSAGE = "Playing (spacebar to pause)";
 
@@ -47,29 +50,61 @@ var _gaq = _gaq || [];
         x.open('GET', url);
         x.send();
     }
-    
-    function daemonLoop() {
+
+    //Receives for messages for swf player events
+    window.addEventListener("message", function(event) {
         if (!active) return;
-        
-        if (typeof this.preview_swf == "undefined") {
-            player = jQuery("#preview-swf")[0];
-            var playerType = (typeof player);            
-            if ((playerType == "function" || playerType == "object") && 
-               (typeof player.getPlayerState == "function")) {
-                this.preview_swf = player;
-            }
-        }        
-        
-        var swfType = (typeof this.preview_swf);
-        if ((swfType == "function" || swfType == "object") &&
-            (typeof this.preview_swf.getPlayerState) == "function" &&
-            this.preview_swf.getPlayerState() == 1 &&
-            !playing) {
-            this.preview_swf.pauseVideo();
+
+        switch(event.data.type) {
+            case 'yteditorpro_onStateChange':
+                if ( event.data.data === 1 && !playing ) {
+                    preview_swf.pauseVideo();
+                }
+                //update the duration
+                duration = preview_swf.getDuration();
+                setWorking(false);
+                break;
         }
-        
-        //Maintain current timeline position using the pro mode scrubber
-        if ( !playing ) {
+    });
+
+    function setupPlayer(player) {
+        if (player) {
+            this.preview_swf = player;
+
+            //Inject a function into the top-level page to proxy messages from the video player
+            var script = document.createElement('script');
+            script.innerHTML = 'var yteditorpro_onStateChange = function(data) { window.postMessage({ type: "yteditorpro_onStateChange", data: data }, "*"); };'
+            document.getElementById('body').appendChild(script);
+
+            //Add event listener to player swf for state changes
+            this.preview_swf.addEventListener("onStateChange","yteditorpro_onStateChange");;
+        }
+
+        initialized = true;
+    }
+
+    function initialize() {
+        var player = jQuery("#preview-swf")[0];
+        var playerType = (typeof player);
+        if ((playerType === "function" || playerType === "object") &&
+            (typeof player.getPlayerState === "function")) {
+            setupPlayer(player);
+        }
+
+        //Try again in 1 second if initialization didn't occur
+        if(!initialized) {
+            setTimeout(initialize, 1000);
+        }
+    }
+
+    function updateTimelineScrollbar() {
+        if ( !active || playing ) {
+            jQuery(".editor-timeline").css('overflow-x', 'scroll');
+        } else {
+            //Hide the timeline scrollbar
+            jQuery(".editor-timeline").css('overflow-x', 'hidden');
+
+            //Prevent the scrollbar on the timeline from being moved separately from the scrubber
             var sliderValue = jQuery("#timeline-scrubber").slider('value');
             var timelineWidth = jQuery(".editor-timeline")[0].scrollWidth - jQuery(".editor-timeline")[0].clientWidth;
             var newScroll = Math.round((timelineWidth*sliderValue)/100);
@@ -79,12 +114,18 @@ var _gaq = _gaq || [];
         }
     }
 
-    window.setInterval(daemonLoop, 500);
-                        
+    //Update the timeline scrollbar on every scroll to lock it in place
+    jQuery(".editor-timeline").scroll(function(evt) {
+        updateTimelineScrollbar();
+    });
+
+    updateTimelineScrollbar();
+    initialize();
+
     $("#publish-button").click(function(evt) {
         publishRequested = true; //Leaving the page to publish video
     });
-    
+
     window.onbeforeunload = confirmExit;
     function confirmExit(event) {
         //Don't request confirm if publishing
@@ -94,10 +135,10 @@ var _gaq = _gaq || [];
         } else {
             _gaq.push(['_trackEvent', 'Extension', 'ConditionalExit']);
         }
-        
+
         return "There may be unsaved changes. Do you wish to leave the page?";
     }
-    
+
     jQuery("#page").addClass('promode_active');
     function toggleActive() {
         active = !active;
@@ -109,53 +150,100 @@ var _gaq = _gaq || [];
             jQuery("#page").removeClass('promode_active');
             jQuery("#timeline-scrubber").hide();
         }
+
+        updateTimelineScrollbar();
     }
-    
+
     //Deactivate hotkeys when focused in text inputs
     jQuery("input[type*=text], textarea").focus(function(evt){
-       toggleActive(); 
+       toggleActive();
     });
     jQuery("input[type*=text], textarea").blur(function(evt){
         toggleActive();
     });
-    
+
     //Reset clip select state when clip is clicked
     jQuery(".timeline-video-clip").click(function(evt){
-        clipSelectState = 0; 
+        clipSelectState = 0;
     });
-    
+
     jQuery(".editor-timeline").scroll(function(evt){
         if ( playing ) {
             updateScrubber();
         }
     });
 
-    $(".editor-timeline").before("<br /><div id='timeline-scrubber'></div>");
+    //$(".editor-timeline").before("<br /><div id='playpause'>PLAY</div><div id='timeline-scrubber'></div><br />");
+    $("#storyboard").before("<br /><table id='controls_table'><tr><td><div id='pauseplay_button' class='playbutton'></div></td><td id='td_scrubber'><div id='timeline-scrubber'></div></td></tr></table>");
+    $("#pauseplay_button").click(function(evt) {
+        togglePlay();
+    });
+
     $("#timeline-scrubber").slider({
-        min: 0, 
+        min: 0,
         max: 100,
         step: .01,
         slide: handleScrub
     });
-    
+
     //Set size of the scrubber handler
-    $('.ui-slider-handle').height(30);
-    $('.ui-slider-handle').width(30);
-    
+    $('.ui-slider-handle').height(25);
+    $('.ui-slider-handle').width(25);
+
+    function isClipSelected() {
+        return jQuery(".timeline-video-clips").children(".selected").length > 0;
+    }
+
     function handleScrub(evt, ui) {
         var value = ui.value;
         var timelineWidth = jQuery(".editor-timeline")[0].scrollWidth - jQuery(".editor-timeline")[0].clientWidth;
         jQuery(".editor-timeline").scrollLeft(Math.round((timelineWidth*value)/100));
+
+        if ( !isClipSelected() ) {
+            //Seek the playhead based on the scrubber position
+            preview_swf.seekTo(Math.round((duration*value)/100));
+        }
     }
-        
+
     function updateScrubber() {
         var timelineScroll = jQuery(".editor-timeline").scrollLeft();
         var timelineWidth = jQuery(".editor-timeline")[0].scrollWidth - jQuery(".editor-timeline")[0].clientWidth;
+
         $("#timeline-scrubber").slider('value', Math.round(10000 * timelineScroll/timelineWidth)/100);
     }
-    
+
+    function togglePlay() {
+        var player = jQuery("#preview-swf")[0];
+
+        if (player.getPlayerState() == 1) {
+            playing = false;
+            player.pauseVideo();
+            $("#timeline-scrubber").slider('enable');
+            $("#play-state-msg").text(PAUSED_MESSAGE);
+            $("#play-state-msg").toggleClass('play-state-paused');
+            $("#play-state-msg").toggleClass('play-state-playing');
+            $("#pauseplay_button").toggleClass('pausebutton');
+            $("#pauseplay_button").toggleClass('playbutton');
+        } else {
+            playing = true;
+            player.playVideo();
+            $("#timeline-scrubber").slider('disable');
+            $("#play-state-msg").text(PLAYING_MESSAGE);
+            $("#play-state-msg").toggleClass('play-state-paused');
+            $("#play-state-msg").toggleClass('play-state-playing');
+            $("#pauseplay_button").toggleClass('pausebutton');
+            $("#pauseplay_button").toggleClass('playbutton');
+        }
+
+        updateTimelineScrollbar();
+    }
+
+    function setWorking(working) {
+        self.working = working;
+    }
+
     $("#save-changes-message").after(" <span id='play-state-msg' class='play-state-paused'>" + PAUSED_MESSAGE + "</span>");
-    
+
     //Handle scroll right / left with arrow keys
     jQuery(document).keydown(function(evt){
         if ( evt.which == 39 ) { //scrub right
@@ -179,7 +267,7 @@ var _gaq = _gaq || [];
         }
     });
 
-    
+
     //Modal Help Screen
     $("body").append('<div id="yteditorpro_help" class="modal fade">' +
       '<div class="modal-dialog">' +
@@ -216,7 +304,7 @@ var _gaq = _gaq || [];
       '</div>' +
     '</div>');
     $("#yteditorpro_help").modal({'show':false});
-    
+
     /* center modal - http://www.minimit.com/articles/solutions-tutorials/vertical-center-bootstrap-3-modals */
     function centerModals(){
       $('.modal').each(function(i){
@@ -229,7 +317,7 @@ var _gaq = _gaq || [];
     }
     $('.modal').on('show.bs.modal', centerModals);
     $(window).on('resize', centerModals);
-    
+
     //Hotkeys
     jQuery(document).keypress(
         function(event) {
@@ -246,23 +334,8 @@ var _gaq = _gaq || [];
                 } else if ( event.which == 32 ) { //Spacebar - Pause/Play video
                     _gaq.push(['_trackEvent', 'Hotkey', 'PausePlay']);
                     event.preventDefault();
-                    var player = jQuery("#preview-swf")[0];
 
-                    if (player.getPlayerState() == 1) {
-                        playing = false;
-                        player.pauseVideo();
-                        $("#timeline-scrubber").slider('enable');
-                        $("#play-state-msg").text(PAUSED_MESSAGE);
-                        $("#play-state-msg").toggleClass('play-state-paused');
-                        $("#play-state-msg").toggleClass('play-state-playing');
-                    } else {
-                        playing = true;
-                        player.playVideo();
-                        $("#timeline-scrubber").slider('disable');
-                        $("#play-state-msg").text(PLAYING_MESSAGE);
-                        $("#play-state-msg").toggleClass('play-state-paused');
-                        $("#play-state-msg").toggleClass('play-state-playing');
-                    }
+                    togglePlay();
                 } else if ( event.which == 115 ) { //S - sort thumbnails
                     _gaq.push(['_trackEvent', 'Hotkey', 'SortThumbnails']);
                     if ( jQuery("#images-tab").attr('class').indexOf('selected') != -1 ) {
@@ -282,24 +355,34 @@ var _gaq = _gaq || [];
                     jQuery("input[effectid*='KEN_BURNS']").click();
                 } else if ( event.which == 43) { //+ key increase by one second selected clip
                     _gaq.push(['_trackEvent', 'Hotkey', 'Increase1S']);
-                    jQuery(".right-trimmer").each(function(idx,val) {
-                        var target = jQuery(val);
-                        if (target.css("visibility") == "visible") {
-                            for ( var i = 0; i < 15; i++ ) {
-                                target.find(".nudge-right").click();
-                            }                                
-                        }
-                    });
-                } else if ( event.which == 45) { //- key decrease by one second selected clip
-                    _gaq.push(['_trackEvent', 'Hotkey', 'Decrease1S']);
-                    jQuery(".right-trimmer").each(function(idx,val) {
-                        var target = jQuery(val);
-                        if (target.css("visibility") == "visible") {
-                            for ( var i = 0; i < 15; i++ ) {
-                                target.find(".nudge-left").click();
+
+                    if ( !self.working ) {
+                        var selectedClip = jQuery(".timeline-video-clips").children(".selected").first();
+                        if ( selectedClip ) {
+                            var n = selectedClip.find(".nudge-right");
+                            if ( n && n.length >= 2 ) {
+                                setWorking(true);
+                                for ( var i = 0; i < 15; i++ ) {
+                                    n[1].click();
+                                }
                             }
                         }
-                    });
+                    }
+
+                } else if ( event.which == 45) { //- key decrease by one second selected clip
+                    _gaq.push(['_trackEvent', 'Hotkey', 'Decrease1S']);
+                    if ( !self.working ) {
+                        var selectedClip = jQuery(".timeline-video-clips").children(".selected").first();
+                        if ( selectedClip ) {
+                            var n = selectedClip.find(".nudge-left");
+                            if ( n && n.length >= 2 ) {
+                                setWorking(true);
+                                for ( var i = 0; i < 15; i++ ) {
+                                    n[1].click();
+                                }
+                            }
+                        }
+                    }
                 } else if ( event.which == 49) { //1 - video tab
                     _gaq.push(['_trackEvent', 'Hotkey', 'VideoTab']);
                     if (jQuery("#mediapicker-infobox").attr('class') == "infobox-visible") {
@@ -313,7 +396,7 @@ var _gaq = _gaq || [];
                         jQuery("#mediapicker-infobox").toggleClass("mediapicker-visible");
                         jQuery("#mediapicker-infobox").toggleClass("infobox-visible");
                     }
-                    jQuery("#cc-tab").click();                    
+                    jQuery("#cc-tab").click();
                 } else if ( event.which == 51) { //3 images tab
                     _gaq.push(['_trackEvent', 'Hotkey', 'ImagesTab']);
                     if (jQuery("#mediapicker-infobox").attr('class') == "infobox-visible") {
@@ -344,14 +427,14 @@ var _gaq = _gaq || [];
                     jQuery("#text-tab").click();
                 } else if ( event.which == 112 ) { //P - focus current clip
                     _gaq.push(['_trackEvent', 'Hotkey', 'FocusCurrent']);
-                    
+
                     var offset = jQuery(".timeline-video-clips").children(".selected").css('left');
-                    if ( offset != undefined ) {
-                        if ( clipSelectState == 0 ) {
+                    if ( offset ) {
+                        if ( clipSelectState === 0 ) {
                             //Scroll to start of clip
                             jQuery(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))));
                             clipSelectState = 1;
-                        } else if ( clipSelectState == 1 ) {
+                        } else if ( clipSelectState === 1 ) {
                             //Scroll to end of clip
                             var width = jQuery(".timeline-video-clips").children(".selected").width();
                             jQuery(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))) + width);
@@ -373,30 +456,48 @@ var _gaq = _gaq || [];
                     $("#yteditorpro_help").modal('toggle');
                 } else if ( event.which == 46 ) { // . - next clip in timeline
                     _gaq.push(['_trackEvent', 'Hotkey', 'NextClip']);
-                    
-                    var nextClip = jQuery(".timeline-video-clips").children(".selected").next();
-                    
-                    if ( nextClip != undefined ) {
+
+                    var nextClip = undefined;
+                    if ( jQuery(".timeline-video-clips").children(".selected").length === 0 ) {
+                        if (jQuery(".timeline-video-clips").children().length > 0) {
+                            nextClip = jQuery(".timeline-video-clips").children().first();
+                        }
+                    } else {
+                        nextClip = jQuery(".timeline-video-clips").children(".selected").next();
+                    }
+
+                    if ( nextClip ) {
                         nextClip.click();
                         var offset = nextClip.css('left');
-                        jQuery(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))));
+                        if ( offset ) {
+                            jQuery(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))));
+                        }
                     }
-                    
+
                     updateScrubber();
                 } else if ( event.which == 44 ) { // , - previous clip in timeline
                     _gaq.push(['_trackEvent', 'Hotkey', 'PrevClip']);
-                    
-                    var prevClip = jQuery(".timeline-video-clips").children(".selected").prev();
-                    
-                    if ( prevClip != undefined ) {
+
+                    var prevClip = undefined;
+                    if ( jQuery(".timeline-video-clips").children(".selected").length === 0 ) {
+                        if (jQuery(".timeline-video-clips").children().length > 0) {
+                            prevClip = jQuery(jQuery(".timeline-video-clips").children().first());
+                        }
+                    } else {
+                        prevClip = jQuery(".timeline-video-clips").children(".selected").prev();
+                    }
+
+                    if ( prevClip ) {
                         prevClip.click();
                         var offset = prevClip.css('left');
-                        jQuery(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))));
+                        if ( offset ) {
+                            jQuery(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))));
+                        }
                     }
-                    
+
                     updateScrubber();
                 }
-            } 
+            }
         }
     );
 })();

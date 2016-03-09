@@ -3,24 +3,24 @@
 
   "name": "Pro Mode for YouTube Video Editor",
   "description": "Enables various hotkeys to speed up and generally make YouTube's video editor more usable.",
-  "version": "0.14",
+  "version": "0.15",
   "short_name" : "YTEditorProMode",
   "icons": { "16": "images/icon16.png",
              "48": "images/icon48.png",
              "128": "images/icon128.png" },
   "permissions": [
-	"https://*.google-analytics.com/*", "storage"
+  "https://*.google-analytics.com/*", "storage"
   ],
   "content_scripts": [
     {
       "matches": ["*://*.youtube.com/editor*"],
-	  "css": ["css/jquery-ui.css","css/jquery-ui.structure.css","css/style.css","css/bootstrap.css"],
+      "css": ["css/jquery-ui.css","css/jquery-ui.structure.css","css/style.css","css/bootstrap.css"],
       "js": ["js/jquery-1.11.1.min.js","js/jquery-ui.js","js/bootstrap.js","js/yteditorpro.js"]
     }
   ],
   "web_accessible_resources": [
-	"js/ga.js",
-	"images/*.png",
-	"images/jquery-ui/*.png"
+  "js/ga.js",
+  "images/*.png",
+  "images/jquery-ui/*.png"
   ]
 }

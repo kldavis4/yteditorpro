@@ -17,4 +17,44 @@ table.help td {
     font-style: italic;
 }
 
+.ui-widget-content {background: #CE1312;}
+
 .ui-slider-horizontal .ui-state-default {background: white url("chrome-extension://__MSG_@@extension_id__/images/scrubhandle.png") no-repeat scroll 50% 50%;}
+
+#timeline-scrubber {
+    padding: 9px;
+}
+
+.playbutton {
+    background-image: url("chrome-extension://__MSG_@@extension_id__/images/ic_play_circle_filled_black_24dp_2x.png");
+    background-repeat: no-repeat;
+    width: 48px;
+    height: 48px;
+    margin: 0;
+    padding: 0;
+    float: left;
+    cursor: pointer;
+}
+
+.pausebutton {
+    background-image: url("chrome-extension://__MSG_@@extension_id__/images/ic_pause_circle_filled_black_24dp_2x.png");
+    background-repeat: no-repeat;
+    width: 48px;
+    height: 48px;
+    margin: 0;
+    padding: 0;
+    float: left;
+}
+
+#controls_table {
+    width: 100%;
+    border-spacing: 15px;
+    border-collapse: separate;
+    margin-left: 5px;
+    margin-right: 25px;
+    margin-bottom: 10px;
+}
+
+#td_scrubber {
+    width: 100%;
+}
