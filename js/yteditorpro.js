@@ -2,6 +2,9 @@ var _gaq = _gaq || [];
 
 (function(){
     var UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // Update after 24 hours
+    var PAUSED_MESSAGE = "Paused (spacebar to play)";
+    var PLAYING_MESSAGE = "Playing (spacebar to pause)";
+
     var active = true;
     var publishRequested = false;
     var playing = false;
@@ -10,10 +13,15 @@ var _gaq = _gaq || [];
     var duration = 0;
     var working = false;
     var self = this;
+    var appName = "Pro Mode for YouTube Video Editor";
+    var appVersion = 0.1;
 
-    var PAUSED_MESSAGE = "Paused (spacebar to play)";
-    var PLAYING_MESSAGE = "Playing (spacebar to pause)";
+    var manifest = chrome.runtime.getManifest();
+    appName = manifest.name;
+    appVersion = manifest.version;
 
+    //Google Analytics
+    //
     _gaq.push(function() {
         _gaq.push(['_setAccount', 'UA-10393243-10']);
         _gaq.push(['_trackPageview']);
@@ -147,6 +155,39 @@ var _gaq = _gaq || [];
         initialized = true;
     }
 
+    function doWelcome() {
+        chrome.storage.local.get({
+             firstUsage: true,
+             lastVersion: 0.16,
+             publishCount: 0,
+             promptForReview: true
+        },
+        function(items) {
+            if ( items.firstUsage ) {
+                _gaq.push(['_trackEvent', 'Extension', 'HelpFirstUsage']);
+
+                //Pop the help screen automatically on first usage
+                $("#yteditorpro_help").modal('toggle');
+
+                chrome.storage.local.set({firstUsage: false});
+            } else if ( items.lastVersion < parseFloat(appVersion)) {
+                _gaq.push(['_trackEvent', 'Extension', 'WhatsNew']);
+
+                //Pop the changes screen if there is a version update
+                $("#yteditorpro_changes").modal('toggle');
+
+                chrome.storage.local.set({lastVersion: parseFloat(appVersion)});
+            } else if ( items.publishCount >= 1 ) {
+                //If the user has not clicked either Ok! or No Thanks then we prompt after first publish or every third publish
+                if ( !items.reviewCompleted &&
+                     (items.promptForReview && (items.publishCount === 1 || items.publishCount % 3 === 0)) ) {
+                    _gaq.push(['_trackEvent', 'Extension', 'ReviewPrompt']);
+                    $("#yteditorpro_review").modal('toggle');
+                }
+            }
+        });
+    }
+
     function initialize() {
         var player = jQuery("#preview-swf")[0];
         var playerType = (typeof player);
@@ -158,6 +199,8 @@ var _gaq = _gaq || [];
         //Try again in 1 second if initialization didn't occur
         if(!initialized) {
             setTimeout(initialize, 1000);
+        } else {
+            doWelcome();
         }
     }
 
@@ -188,6 +231,18 @@ var _gaq = _gaq || [];
 
     $("#publish-button").click(function(evt) {
         publishRequested = true; //Leaving the page to publish video
+
+        //Set the has published flag
+        chrome.storage.local.set({hasPublished: true});
+
+        chrome.storage.local.get({
+             publishCount: 0,
+             reviewCompleted: false
+        },
+        function(items) {
+            //Increment publishCount and set the prompt for review flag
+            chrome.storage.local.set({publishCount: (items.publishCount+1), promptForReview: !items.reviewCompleted});
+        });
     });
 
     window.onbeforeunload = confirmExit;
@@ -353,8 +408,8 @@ var _gaq = _gaq || [];
         '<div class="modal-content">' +
           '<div class="modal-header">' +
             '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
-            '<h4 class="modal-title"><b>Pro Mode for Youtube Video Editor - Help</b></h4>' +
-            '<br />Watch the <a href="https://www.youtube.com/watch?v=5FshFrRcFrw" target="_blank">demo</a>' +
+            '<h4 class="modal-title"><b>' + appName + ' ' + appVersion + ' - Help</b></h4>' +
+            '<button id="watch_demo" type="button" class="btn btn-link btn-sm">Watch the demo</button> <button id="write_review" type="button" class="btn btn-link btn-sm">Write a review</button> <button id="whats_new" type="button" class="btn btn-link btn-sm">What\'s new</button> <button id="get_help" type="button" class="btn btn-link btn-sm">Support</button>' +
           '</div>' +
           '<div class="modal-body">' +
             '<table class="help">' +
@@ -384,6 +439,89 @@ var _gaq = _gaq || [];
       '</div>' +
     '</div>');
     $("#yteditorpro_help").modal({'show':false});
+
+    $("#watch_demo").click(function(evt) {
+        _gaq.push(['_trackEvent', 'Extension', 'WatchDemo']);
+        window.open('https://www.youtube.com/watch?v=5FshFrRcFrw');
+    });
+
+    $("#write_review").click(function(evt) {
+        _gaq.push(['_trackEvent', 'Extension', 'WriteReviewHelpScreen']);
+        chrome.storage.local.set({reviewCompleted: true, promptForReview: false});
+        window.open('https://chrome.google.com/webstore/detail/pro-mode-for-youtube-vide/aenmbapdfjdkanhfppdmmdipakgacanp/reviews');
+    });
+
+    $("#whats_new").click(function(evt) {
+        _gaq.push(['_trackEvent', 'Extension', 'WhatsNewHelpScreen']);
+        $("#yteditorpro_changes").modal('toggle');
+        $("#yteditorpro_help").modal('toggle');
+    });
+
+    $("#get_help").click(function(evt) {
+        _gaq.push(['_trackEvent', 'Extension', 'ClickSupport']);
+        window.open('https://chrome.google.com/webstore/detail/pro-mode-for-youtube-vide/aenmbapdfjdkanhfppdmmdipakgacanp/support');
+    });
+
+    //Modal What's New Screen
+    $("body").append('<div id="yteditorpro_changes" class="modal fade">' +
+      '<div class="modal-dialog">' +
+        '<div class="modal-content">' +
+          '<div class="modal-header">' +
+            '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+            '<h4 class="modal-title" style="text-align: center;"><b>What\'s new in version ' + appVersion + ':</b></h4>' +
+          '</div>' +
+          '<div class="modal-body">' +
+            '<div style="text-align: center;">' +
+            '<ul class="list-group" style="display: inline-block;">' +
+            '<li class="list-group-item" style="text-align: left; border: 0 none;">Updated UI with play/pause button and welcome screens</li>' +
+            '<li class="list-group-item" style="text-align: left; border: 0 none;">Video scrubber now seeks the video preview when adjusted if no clip is selected</li>' +
+            '<li class="list-group-item" style="text-align: left; border: 0 none;">Better integration with the video player</li>' +
+            '<li class="list-group-item" style="text-align: left; border: 0 none;">Improvements/fixes to the increase/decrease clip length function</li>' +
+            '</ul>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>');
+    $("#yteditorpro_changes").modal({'show':false});
+
+    //Modal Review
+    $("body").append('<div id="yteditorpro_review" class="modal fade">' +
+      '<div class="modal-dialog">' +
+        '<div class="modal-content">' +
+          '<div class="modal-header">' +
+            '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+            '<h4 class="modal-title" style="text-align: center;"><b>Like What You See?</b></h4>' +
+          '</div>' +
+          '<div class="modal-body">' +
+            'Share your experience with others and rate this extension on Chrome Web Store.<br /><br />' +
+            '<button id="review_ok" type="button" class="btn btn-default" style="margin: 5px;">Ok!</button>' +
+            '<button id="review_later" type="button" class="btn btn-default" style="margin: 5px;">Maybe Later...</button>' +
+            '<button id="review_no" type="button" class="btn btn-default" style="margin: 5px;">No Thanks.</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>');
+    $("#yteditorpro_review").modal({'show':false});
+
+    $("#review_ok").click(function(evt) {
+        _gaq.push(['_trackEvent', 'Extension', 'ReviewOk']);
+        chrome.storage.local.set({reviewCompleted: true, promptForReview: false});
+        window.open('https://chrome.google.com/webstore/detail/pro-mode-for-youtube-vide/aenmbapdfjdkanhfppdmmdipakgacanp/reviews');
+        $("#yteditorpro_review").modal('toggle');
+    });
+
+    $("#review_no").click(function(evt) {
+        _gaq.push(['_trackEvent', 'Extension', 'ReviewNo']);
+        chrome.storage.local.set({reviewCompleted: true, promptForReview: false});
+        $("#yteditorpro_review").modal('toggle');
+    });
+
+    $("#review_later").click(function(evt) {
+        _gaq.push(['_trackEvent', 'Extension', 'ReviewLater']);
+        chrome.storage.local.set({promptForReview: false});
+        $("#yteditorpro_review").modal('toggle');
+    });
 
     /* center modal - http://www.minimit.com/articles/solutions-tutorials/vertical-center-bootstrap-3-modals */
     function centerModals(){

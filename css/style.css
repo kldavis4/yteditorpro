@@ -7,6 +7,17 @@ table.help td {
     padding-right: 5px;
 }
 
+li:before {
+    /*Using a Bootstrap glyphicon as the bullet point*/
+    content: "\e080";
+    font-family: 'Glyphicons Halflings';
+    font-size: 9px;
+    float: left;
+    margin-top: 4px;
+    margin-left: -17px;
+    color: #CCCCCC;
+}
+
 .play-state-paused {
     color: green;
     font-style: italic;
