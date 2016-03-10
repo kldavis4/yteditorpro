@@ -1,4 +1,4 @@
-var _gaq = _gaq || [];
+//var _gaq = _gaq || [];
 
 (function(){
     var UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // Update after 24 hours
@@ -20,44 +20,18 @@ var _gaq = _gaq || [];
     appName = manifest.name;
     appVersion = manifest.version;
 
-    //Google Analytics
-    //
-    _gaq.push(function() {
-        _gaq.push(['_setAccount', 'UA-10393243-10']);
-        _gaq.push(['_trackPageview']);
-        _gaq.push(['_trackEvent', 'Extension', 'GALoaded']);
-    });
-
-    // Retrieve GA from storage
-    chrome.storage.local.get({
-        lastUpdated: 0,
-        code: ''
-    }, function(items) {
-        if (Date.now() - items.lastUpdated > UPDATE_INTERVAL) {
-            // Get updated file, and if found, save it.
-            get('https://ssl.google-analytics.com/ga.js', function(code) {
-                if (!code) return;
-                chrome.storage.local.set({lastUpdated: Date.now(), code: code});
+    var _gaq = new function() {
+        this.push = function(evt) {
+            chrome.runtime.sendMessage({event: evt}, function(response) {
+                if ("Success" !== response) {
+                    console.log("Unexpected error sending GA event: " + response);
+                }
             });
         }
-        if (items.code) {// Cached GA is available, use it
-            eval_code(items.code);
-        } else {// No cached version yet. Load from extension
-            get(chrome.extension.getURL('js/ga.js'), eval_code);
-       }
-    });
-
-    // Typically run within a few milliseconds
-    function eval_code(code) {
-        try { window.eval(code); } catch (e) { console.error(e); }
     }
 
-    function get(url, callback) {
-        var x = new XMLHttpRequest();
-        x.onload = x.onerror = function() { callback(x.responseText); };
-        x.open('GET', url);
-        x.send();
-    }
+    _gaq.push(['_trackPageview']);
+    _gaq.push(['_trackEvent', 'Extension', 'GALoaded']);
 
     //Event simulation
     //http://stackoverflow.com/a/6158050/290918
