@@ -265,7 +265,7 @@ var _gaq = _gaq || [];
 
         if ( !isClipSelected() ) {
             //Seek the playhead based on the scrubber position
-            preview_swf.seekTo(Math.round((duration*value)/100));
+            preview_swf.seekTo((duration*value)/100);
         }
     }
 
@@ -354,6 +354,7 @@ var _gaq = _gaq || [];
           '<div class="modal-header">' +
             '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
             '<h4 class="modal-title"><b>Pro Mode for Youtube Video Editor - Help</b></h4>' +
+            '<br />Watch the <a href="https://www.youtube.com/watch?v=5FshFrRcFrw" target="_blank">demo</a>' +
           '</div>' +
           '<div class="modal-body">' +
             '<table class="help">' +
@@ -458,17 +459,20 @@ var _gaq = _gaq || [];
                     if ( handle && handle.length > 0 ) {
                         var timeSpan = jQuery(".timeline-video-clips").children(".selected").find(".editor-thumb-time");
                         if (timeSpan && timeSpan.length > 0) {
-                            var startTime = parseClipTime(timeSpan[0].textContent);
-                            var moveX = 1000;
-                            simulate(handle[0], "mousedown", { pointerX: moveX, pointerY: 0 });
-                            while (true) {
-                                moveX -= 1;
-                                simulate(handle[0], "mousemove", { pointerX: moveX, pointerY: 0 });
-                                if ((startTime - parseClipTime(timeSpan[0].textContent)) >= 1000 || moveX <= 0) {
-                                    break;
+                            var currentTimeLabel = timeSpan[0].textContent;
+                            if ( currentTimeLabel !== "0:01" && currentTimeLabel !== "0:00" ) {
+                                var startTime = parseClipTime(currentTimeLabel);
+                                var moveX = 1000;
+                                simulate(handle[0], "mousedown", { pointerX: moveX, pointerY: 0 });
+                                while (true) {
+                                    moveX -= 1;
+                                    simulate(handle[0], "mousemove", { pointerX: moveX, pointerY: 0 });
+                                    if ((startTime - parseClipTime(timeSpan[0].textContent)) >= 1000 || moveX <= 0) {
+                                        break;
+                                    }
                                 }
+                                simulate(handle[0], "mouseup");
                             }
-                            simulate(handle[0], "mouseup");
                         }
                     }
                 } else if ( event.which == 49) { //1 - video tab
