@@ -7,7 +7,7 @@ table.help td {
     padding-right: 5px;
 }
 
-li:before {
+li.list-group-item:before {
     /*Using a Bootstrap glyphicon as the bullet point*/
     content: "\e080";
     font-family: 'Glyphicons Halflings';
