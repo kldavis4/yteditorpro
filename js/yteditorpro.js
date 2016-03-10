@@ -447,6 +447,7 @@
           '<div class="modal-body">' +
             '<div style="text-align: center;">' +
             '<ul class="list-group" style="display: inline-block;">' +
+            '<li class="list-group-item" style="text-align: left; border: 0 none;">Fixed bug preventing font loading</li>' +
             '<li class="list-group-item" style="text-align: left; border: 0 none;">Updated UI with play/pause button and welcome screens</li>' +
             '<li class="list-group-item" style="text-align: left; border: 0 none;">Video scrubber now seeks the video preview when adjusted if no clip is selected</li>' +
             '<li class="list-group-item" style="text-align: left; border: 0 none;">Better integration with the video player</li>' +
