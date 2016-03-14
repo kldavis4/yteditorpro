@@ -27,6 +27,10 @@
     var self = this;
     var appName = "Pro Mode for YouTube Video Editor";
     var appVersion = 0.1;
+    var audioPreviewRequested = false;
+    var audioPreviewPlaying = false;
+    var videoPreviewRequested = false;
+    var videoPreviewPlaying = false;
 
     var manifest = chrome.runtime.getManifest();
     appName = manifest.name;
@@ -115,8 +119,24 @@
 
         switch(event.data.type) {
             case 'yteditorpro_onStateChange':
-                if ( event.data.data === 1 && !playing ) {
-                    preview_swf.pauseVideo();
+                if ( event.data.data === -1 ) {
+                    if ( audioPreviewRequested ) {
+                        audioPreviewPlaying = true;
+                        audioPreviewRequested = false;
+                    } else {
+                        audioPreviewPlaying = false;
+                    }
+                    if ( videoPreviewRequested ) {
+                        videoPreviewPlaying = true;
+                        videoPreviewRequested = false;
+                    } else {
+                        videoPreviewPlaying = false;
+                    }
+                } else if ( event.data.data === 1 &&
+                            !playing ) {
+                    if ( !audioPreviewPlaying && !videoPreviewPlaying ) { //allow preview audio to play
+                        preview_swf.pauseVideo();
+                    }
                 }
                 //update the duration
                 duration = preview_swf.getDuration();
@@ -187,8 +207,43 @@
             setTimeout(initialize, 1000);
         } else {
             doWelcome();
+
+            //Setup the preview buttons so they set the audioPreviewRequested flag
+            //and update every time the list of audio changes
+            jQuery("#audio-media-list").bind("DOMSubtreeModified", function(evt) {
+                updateAudioPreviewClickHandlers();
+            });
+            jQuery("#audio-tab").click(function(evt) {
+                updateAudioPreviewClickHandlers();
+            });
+
+            //Setup the thumb preview buttons so they set the viewPreviewRequested flag
+            //and update every time the list of audio changes
+            jQuery("#video-media-list").bind("DOMSubtreeModified", function(evt) {
+                updateVideoPreviewClickHandlers();
+            });
+            jQuery("#video-tab").click(function(evt) {
+                updateVideoPreviewClickHandlers();
+            });
         }
     }
+
+    //Sets up handlers on all the audio-preview buttons to set the audioPreviewRequest on click
+    function updateAudioPreviewClickHandlers() {
+        jQuery(".audio-preview").not(".yte_flagged").click(function(evt) {
+            audioPreviewRequested = true;
+        });
+        jQuery(".audio-preview").not(".yte_flagged").addClass("yte_flagged");
+    }
+
+    //Sets up handlers on all the audio-preview buttons to set the audioPreviewRequest on click
+    function updateVideoPreviewClickHandlers() {
+        jQuery(".thumb-play").not(".yte_flagged").click(function(evt) {
+            videoPreviewRequested = true;
+        });
+        jQuery(".thumb-play").not(".yte_flagged").addClass("yte_flagged");
+    }
+
 
     function updateTimelineScrollbar() {
         if ( !active || playing ) {
@@ -251,9 +306,11 @@
         if ( active ) {
             jQuery("#page").addClass('promode_active');
             jQuery("#timeline-scrubber").show();
+            jQuery("#pauseplay_button").show();
         } else {
             jQuery("#page").removeClass('promode_active');
             jQuery("#timeline-scrubber").hide();
+            jQuery("#pauseplay_button").hide();
         }
 
         updateTimelineScrollbar();
@@ -459,6 +516,7 @@
           '<div class="modal-body">' +
             '<div style="text-align: center;">' +
             '<ul class="list-group" style="display: inline-block;">' +
+            '<li class="list-group-item" style="text-align: left; border: 0 none;">Modified to allow playback of video and audio previews</li>' +
             '<li class="list-group-item" style="text-align: left; border: 0 none;">Fixed bug preventing font loading</li>' +
             '<li class="list-group-item" style="text-align: left; border: 0 none;">Updated UI with play/pause button and welcome screens</li>' +
             '<li class="list-group-item" style="text-align: left; border: 0 none;">Video scrubber now seeks the video preview when adjusted if no clip is selected</li>' +
