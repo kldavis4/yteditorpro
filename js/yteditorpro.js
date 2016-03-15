@@ -444,142 +444,55 @@
         }
     });
 
+    $("body").append('<div id="yt_dialogs"/>');
+    $("#yt_dialogs").load(chrome.extension.getURL('html/dialogs.html'), function() {
+        $("#yteditorpro_help").modal({'show':false});
+        $("#yteditorpro_changes").modal({'show':false});
+        $("#yteditorpro_review").modal({'show':false});
+        $(".yt_version_label").text(appVersion);
+        $(".yt_appname_label").text(appName);
 
-    //Modal Help Screen
-    $("body").append('<div id="yteditorpro_help" class="modal fade">' +
-      '<div class="modal-dialog">' +
-        '<div class="modal-content">' +
-          '<div class="modal-header">' +
-            '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
-            '<h4 class="modal-title"><b>' + appName + ' ' + appVersion + ' - Help</b></h4>' +
-            '<button id="watch_demo" type="button" class="btn btn-link btn-sm">Watch the demo</button> <button id="write_review" type="button" class="btn btn-link btn-sm">Write a review</button> <button id="whats_new" type="button" class="btn btn-link btn-sm">What\'s new</button> <button id="get_help" type="button" class="btn btn-link btn-sm">Support</button>' +
-          '</div>' +
-          '<div class="modal-body">' +
-            '<table class="help">' +
-                '<tr><td>' + 'H</td><td>Show / Hide this help screen' + '</td></tr>' +
-                '<tr><td>' + 'CTRL-A</td><td>Toggle pro mode hotkeys on/off' + '</td></tr>' +
-                '<tr><td>' + 'S</td><td>Sort photos alphabetically on the images tab' + '</td></tr>' +
-                '<tr><td>' + 'C</td><td>Close the currently selected clip' + '</td></tr>' +
-                '<tr><td>' + 'K</td><td>Toggle Pan / Zoom effect on currently selected clip' + '</td></tr>' +
-                '<tr><td>' + '+</td><td>Increase currently selected clip by 1 second' + '</td></tr>' +
-                '<tr><td>' + '-</td><td>Decrease currently selected clip by 1 second' + '</td></tr>' +
-                '<tr><td>' + 'P</td><td>Scroll timeline to currently selected clip. Toggle start/end of clip by pressing repeatedly.' + '</td></tr>' +
-                '<tr><td>' + '[</td><td>Scroll timeline to first clip' + '</td></tr>' +
-                '<tr><td>' + ']</td><td>Scroll timeline to last clip' + '</td></tr>' +
-                '<tr><td>' + '.</td><td>Select next clip' + '</td></tr>' +
-                '<tr><td>' + ',</td><td>Select previous clip' + '</td></tr>' +
-                '<tr><td>' + '1</td><td>Video clip tab' + '</td></tr>' +
-                '<tr><td>' + '2</td><td>Copyright tab' + '</td></tr>' +
-                '<tr><td>' + '3</td><td>Photos tab' + '</td></tr>' +
-                '<tr><td>' + '4</td><td>Audio tab' + '</td></tr>' +
-                '<tr><td>' + '5</td><td>Transitions tab' + '</td></tr>' +
-                '<tr><td>' + '6</td><td>Text tab' + '</td></tr>' +
-                '<tr><td>' + 'Right arrow</td><td>Scroll timeline right' + '</td></tr>' +
-                '<tr><td>' + 'Left arrow</td><td>Scroll timeline left' + '</td></tr>' +
-            '</table>' +
-          '</div>' +
-        '</div>' +
-      '</div>' +
-    '</div>');
-    $("#yteditorpro_help").modal({'show':false});
+        $("#watch_demo").click(function(evt) {
+            _gaq.push(['_trackEvent', 'Extension', 'WatchDemo']);
+            window.open('https://www.youtube.com/watch?v=5FshFrRcFrw');
+        });
 
-    $("#watch_demo").click(function(evt) {
-        _gaq.push(['_trackEvent', 'Extension', 'WatchDemo']);
-        window.open('https://www.youtube.com/watch?v=5FshFrRcFrw');
+        $("#write_review").click(function(evt) {
+            _gaq.push(['_trackEvent', 'Extension', 'WriteReviewHelpScreen']);
+            chrome.storage.local.set({reviewCompleted: true, promptForReview: false});
+            window.open('https://chrome.google.com/webstore/detail/pro-mode-for-youtube-vide/aenmbapdfjdkanhfppdmmdipakgacanp/reviews');
+        });
+
+        $("#whats_new").click(function(evt) {
+            _gaq.push(['_trackEvent', 'Extension', 'WhatsNewHelpScreen']);
+            $("#yteditorpro_changes").modal('toggle');
+            $("#yteditorpro_help").modal('toggle');
+        });
+
+        $("#get_help").click(function(evt) {
+            _gaq.push(['_trackEvent', 'Extension', 'ClickSupport']);
+            window.open('https://chrome.google.com/webstore/detail/pro-mode-for-youtube-vide/aenmbapdfjdkanhfppdmmdipakgacanp/support');
+        });
+
+        $("#review_ok").click(function(evt) {
+            _gaq.push(['_trackEvent', 'Extension', 'ReviewOk']);
+            chrome.storage.local.set({reviewCompleted: true, promptForReview: false});
+            window.open('https://chrome.google.com/webstore/detail/pro-mode-for-youtube-vide/aenmbapdfjdkanhfppdmmdipakgacanp/reviews');
+            $("#yteditorpro_review").modal('toggle');
+        });
+
+        $("#review_no").click(function(evt) {
+            _gaq.push(['_trackEvent', 'Extension', 'ReviewNo']);
+            chrome.storage.local.set({reviewCompleted: true, promptForReview: false});
+            $("#yteditorpro_review").modal('toggle');
+        });
+
+        $("#review_later").click(function(evt) {
+            _gaq.push(['_trackEvent', 'Extension', 'ReviewLater']);
+            chrome.storage.local.set({promptForReview: false});
+            $("#yteditorpro_review").modal('toggle');
+        });
     });
-
-    $("#write_review").click(function(evt) {
-        _gaq.push(['_trackEvent', 'Extension', 'WriteReviewHelpScreen']);
-        chrome.storage.local.set({reviewCompleted: true, promptForReview: false});
-        window.open('https://chrome.google.com/webstore/detail/pro-mode-for-youtube-vide/aenmbapdfjdkanhfppdmmdipakgacanp/reviews');
-    });
-
-    $("#whats_new").click(function(evt) {
-        _gaq.push(['_trackEvent', 'Extension', 'WhatsNewHelpScreen']);
-        $("#yteditorpro_changes").modal('toggle');
-        $("#yteditorpro_help").modal('toggle');
-    });
-
-    $("#get_help").click(function(evt) {
-        _gaq.push(['_trackEvent', 'Extension', 'ClickSupport']);
-        window.open('https://chrome.google.com/webstore/detail/pro-mode-for-youtube-vide/aenmbapdfjdkanhfppdmmdipakgacanp/support');
-    });
-
-    //Modal What's New Screen
-    $("body").append('<div id="yteditorpro_changes" class="modal fade">' +
-      '<div class="modal-dialog">' +
-        '<div class="modal-content">' +
-          '<div class="modal-header">' +
-            '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
-            '<h4 class="modal-title" style="text-align: center;"><b>What\'s new in version ' + appVersion + ':</b></h4>' +
-          '</div>' +
-          '<div class="modal-body">' +
-            '<div style="text-align: center;">' +
-            '<ul class="list-group" style="display: inline-block;">' +
-            '<li class="list-group-item" style="text-align: left; border: 0 none;">Modified to allow playback of video and audio previews</li>' +
-            '<li class="list-group-item" style="text-align: left; border: 0 none;">Fixed bug preventing font loading</li>' +
-            '<li class="list-group-item" style="text-align: left; border: 0 none;">Updated UI with play/pause button and welcome screens</li>' +
-            '<li class="list-group-item" style="text-align: left; border: 0 none;">Video scrubber now seeks the video preview when adjusted if no clip is selected</li>' +
-            '<li class="list-group-item" style="text-align: left; border: 0 none;">Better integration with the video player</li>' +
-            '<li class="list-group-item" style="text-align: left; border: 0 none;">Improvements/fixes to the increase/decrease clip length function</li>' +
-            '</ul>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
-      '</div>' +
-    '</div>');
-    $("#yteditorpro_changes").modal({'show':false});
-
-    //Modal Review
-    $("body").append('<div id="yteditorpro_review" class="modal fade">' +
-      '<div class="modal-dialog">' +
-        '<div class="modal-content">' +
-          '<div class="modal-header">' +
-            '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
-            '<h4 class="modal-title" style="text-align: center;"><b>Like What You See?</b></h4>' +
-          '</div>' +
-          '<div class="modal-body">' +
-            'Share your experience with others and rate this extension on Chrome Web Store.<br /><br />' +
-            '<button id="review_ok" type="button" class="btn btn-default" style="margin: 5px;">Ok!</button>' +
-            '<button id="review_later" type="button" class="btn btn-default" style="margin: 5px;">Maybe Later...</button>' +
-            '<button id="review_no" type="button" class="btn btn-default" style="margin: 5px;">No Thanks.</button>' +
-          '</div>' +
-        '</div>' +
-      '</div>' +
-    '</div>');
-    $("#yteditorpro_review").modal({'show':false});
-
-    $("#review_ok").click(function(evt) {
-        _gaq.push(['_trackEvent', 'Extension', 'ReviewOk']);
-        chrome.storage.local.set({reviewCompleted: true, promptForReview: false});
-        window.open('https://chrome.google.com/webstore/detail/pro-mode-for-youtube-vide/aenmbapdfjdkanhfppdmmdipakgacanp/reviews');
-        $("#yteditorpro_review").modal('toggle');
-    });
-
-    $("#review_no").click(function(evt) {
-        _gaq.push(['_trackEvent', 'Extension', 'ReviewNo']);
-        chrome.storage.local.set({reviewCompleted: true, promptForReview: false});
-        $("#yteditorpro_review").modal('toggle');
-    });
-
-    $("#review_later").click(function(evt) {
-        _gaq.push(['_trackEvent', 'Extension', 'ReviewLater']);
-        chrome.storage.local.set({promptForReview: false});
-        $("#yteditorpro_review").modal('toggle');
-    });
-
-    /* center modal - http://www.minimit.com/articles/solutions-tutorials/vertical-center-bootstrap-3-modals */
-    function centerModals(){
-      $('.modal').each(function(i){
-        var $clone = $(this).clone().css('display', 'block').appendTo('body');
-        var top = Math.round(($clone.height() - $clone.find('.modal-content').height()) / 2);
-        top = top > 0 ? top : 0;
-        $clone.remove();
-        $(this).find('.modal-content').css("margin-top", top);
-      });
-    }
-    $('.modal').on('show.bs.modal', centerModals);
-    $(window).on('resize', centerModals);
 
     //Hotkeys
     jQuery(document).keypress(

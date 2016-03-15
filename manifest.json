@@ -18,10 +18,10 @@
     }
   ],
   "web_accessible_resources": [
-  "js/ga.js",
   "images/*.png",
   "images/jquery-ui/*.png",
-  "fonts/glyphicons*"
+  "fonts/glyphicons*",
+  "html/*"
   ],
   "background": {
     "persistent": false,
