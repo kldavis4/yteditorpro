@@ -14,7 +14,7 @@
     {
       "matches": ["*://*.youtube.com/editor*"],
       "css": ["css/jquery-ui.css","css/jquery-ui.structure.css","css/style.css","css/bootstrap.css"],
-      "js": ["js/jquery-1.11.1.min.js","js/jquery-ui.js","js/bootstrap.js","js/yteditorpro.js"]
+      "js": ["js/jquery-1.11.1.min.js","js/jquery-ui.js","js/bootstrap.js","js/syn.js","js/yteditorpro.js"]
     }
   ],
   "web_accessible_resources": [
