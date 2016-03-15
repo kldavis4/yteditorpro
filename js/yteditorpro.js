@@ -152,11 +152,11 @@
                 updateAudioPreviewClickHandlers();
             });
 
-            $("#video-media-list").bind("DOMSubtreeModified", function(evt) {
+            $(".video-thumblist").bind("DOMSubtreeModified", function(evt) {
                 updateVideoPreviewClickHandlers();
                 updateVideoAddClickHandlers()
             });
-            $("#video-tab").click(function(evt) {
+            $("#video-tab, #cc-tab").click(function(evt) {
                 updateVideoPreviewClickHandlers();
                 updateVideoAddClickHandlers()
             });
@@ -190,12 +190,12 @@
 
     function updateVideoAddClickHandlers() {
         //Fix the add video button to focus on the newly added clip
-        $("#video-media-list").find(".thumb-add").not(".yte_flagged").click(function(evt) {
+        $(".video-thumblist").find(".thumb-add").not(".yte_flagged").click(function(evt) {
             $(".timeline-video-clips").one("DOMSubtreeModified", function(evt) {
                 focusLastClip();
             });
         });
-        $("#video-media-list").find(".thumb-add").not(".yte_flagged").addClass("yte_flagged");
+        $(".video-thumblist").find(".thumb-add").not(".yte_flagged").addClass("yte_flagged");
     }
 
     function updateImageAddClickHandlers() {
