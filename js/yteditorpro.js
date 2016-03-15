@@ -434,6 +434,24 @@
             });
         });
 
+        //Fix add video clip with Enter key behavior
+        //
+        $(".media-list").keyup(function(event) {
+            if ( event.which == 13 ) {
+                //Focus on the new clip that was added
+                var newClip = $(".timeline-video-clips").children().last();
+                if ( newClip ) {
+                    newClip.click();
+                    var offset = newClip.css('left');
+                    if ( offset ) {
+                        $(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))));
+                    }
+
+                    updateScrubber();
+                }
+            }
+        });
+
         //Hotkeys
         $(document).keypress(
             function(event) {
