@@ -434,9 +434,9 @@
             });
         });
 
-        //Fix add video clip with Enter key behavior
+        //Fix add video clip with Enter key behavior & play preview with space
         //
-        $(".media-list").keyup(function(event) {
+        $(".video-thumblist").keydown(function(event) {
             if ( event.which == 13 ) {
                 //Focus on the new clip that was added
                 var newClip = $(".timeline-video-clips").children().last();
@@ -449,6 +449,8 @@
 
                     updateScrubber();
                 }
+            } else if ( event.which == 32 ) {
+                videoPreviewRequested = true;
             }
         });
 
