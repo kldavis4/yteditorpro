@@ -129,7 +129,7 @@
     }
 
     function initialize() {
-        var player = jQuery("#preview-swf")[0];
+        var player = $("#preview-swf")[0];
         var playerType = (typeof player);
         if ((playerType === "function" || playerType === "object") &&
             (typeof player.getPlayerState === "function")) {
@@ -140,23 +140,25 @@
         if(!initialized) {
             setTimeout(initialize, 1000);
         } else {
+            setupUI();
             doWelcome();
+            updateTimelineScrollbar();
 
             //Setup the preview buttons so they set the audioPreviewRequested flag
             //and update every time the list of audio changes
-            jQuery("#audio-media-list").bind("DOMSubtreeModified", function(evt) {
+            $("#audio-media-list").bind("DOMSubtreeModified", function(evt) {
                 updateAudioPreviewClickHandlers();
             });
-            jQuery("#audio-tab").click(function(evt) {
+            $("#audio-tab").click(function(evt) {
                 updateAudioPreviewClickHandlers();
             });
 
             //Setup the thumb preview buttons so they set the viewPreviewRequested flag
             //and update every time the list of audio changes
-            jQuery("#video-media-list").bind("DOMSubtreeModified", function(evt) {
+            $("#video-media-list").bind("DOMSubtreeModified", function(evt) {
                 updateVideoPreviewClickHandlers();
             });
-            jQuery("#video-tab").click(function(evt) {
+            $("#video-tab").click(function(evt) {
                 updateVideoPreviewClickHandlers();
             });
         }
@@ -164,63 +166,37 @@
 
     //Sets up handlers on all the audio-preview buttons to set the audioPreviewRequest on click
     function updateAudioPreviewClickHandlers() {
-        jQuery(".audio-preview").not(".yte_flagged").click(function(evt) {
+        $(".audio-preview").not(".yte_flagged").click(function(evt) {
             audioPreviewRequested = true;
         });
-        jQuery(".audio-preview").not(".yte_flagged").addClass("yte_flagged");
+        $(".audio-preview").not(".yte_flagged").addClass("yte_flagged");
     }
 
     //Sets up handlers on all the audio-preview buttons to set the audioPreviewRequest on click
     function updateVideoPreviewClickHandlers() {
-        jQuery(".thumb-play").not(".yte_flagged").click(function(evt) {
+        $(".thumb-play").not(".yte_flagged").click(function(evt) {
             videoPreviewRequested = true;
         });
-        jQuery(".thumb-play").not(".yte_flagged").addClass("yte_flagged");
+        $(".thumb-play").not(".yte_flagged").addClass("yte_flagged");
     }
-
 
     function updateTimelineScrollbar() {
         if ( !active || playing ) {
-            jQuery(".editor-timeline").css('overflow-x', 'scroll');
+            $(".editor-timeline").css('overflow-x', 'scroll');
         } else {
             //Hide the timeline scrollbar
-            jQuery(".editor-timeline").css('overflow-x', 'hidden');
+            $(".editor-timeline").css('overflow-x', 'hidden');
 
             //Prevent the scrollbar on the timeline from being moved separately from the scrubber
-            var sliderValue = jQuery("#timeline-scrubber").slider('value');
-            var timelineWidth = jQuery(".editor-timeline")[0].scrollWidth - jQuery(".editor-timeline")[0].clientWidth;
+            var sliderValue = $("#timeline-scrubber").slider('value');
+            var timelineWidth = $(".editor-timeline")[0].scrollWidth - $(".editor-timeline")[0].clientWidth;
             var newScroll = Math.round((timelineWidth*sliderValue)/100);
-            if ( jQuery(".editor-timeline").scrollLeft() != newScroll) {
-                jQuery(".editor-timeline").scrollLeft(newScroll);
+            if ( $(".editor-timeline").scrollLeft() != newScroll) {
+                $(".editor-timeline").scrollLeft(newScroll);
             }
         }
     }
 
-    //Update the timeline scrollbar on every scroll to lock it in place
-    jQuery(".editor-timeline").scroll(function(evt) {
-        updateTimelineScrollbar();
-    });
-
-    updateTimelineScrollbar();
-    initialize();
-
-    $("#publish-button").click(function(evt) {
-        publishRequested = true; //Leaving the page to publish video
-
-        //Set the has published flag
-        chrome.storage.local.set({hasPublished: true});
-
-        chrome.storage.local.get({
-             publishCount: 0,
-             reviewCompleted: false
-        },
-        function(items) {
-            //Increment publishCount and set the prompt for review flag
-            chrome.storage.local.set({publishCount: (items.publishCount+1), promptForReview: !items.reviewCompleted});
-        });
-    });
-
-    window.onbeforeunload = confirmExit;
     function confirmExit(event) {
         //Don't request confirm if publishing
         if ( publishRequested ) {
@@ -233,66 +209,30 @@
         return "There may be unsaved changes. Do you wish to leave the page?";
     }
 
-    jQuery("#page").addClass('promode_active');
     function toggleActive() {
         active = !active;
 
         if ( active ) {
-            jQuery("#page").addClass('promode_active');
-            jQuery("#timeline-scrubber").show();
-            jQuery("#pauseplay_button").show();
+            $("#page").addClass('promode_active');
+            $("#timeline-scrubber").show();
+            $("#pauseplay_button").show();
         } else {
-            jQuery("#page").removeClass('promode_active');
-            jQuery("#timeline-scrubber").hide();
-            jQuery("#pauseplay_button").hide();
+            $("#page").removeClass('promode_active');
+            $("#timeline-scrubber").hide();
+            $("#pauseplay_button").hide();
         }
 
         updateTimelineScrollbar();
     }
 
-    //Deactivate hotkeys when focused in text inputs
-    jQuery("input[type*=text], textarea").focus(function(evt){
-       toggleActive();
-    });
-    jQuery("input[type*=text], textarea").blur(function(evt){
-        toggleActive();
-    });
-
-    //Reset clip select state when clip is clicked
-    jQuery(".timeline-video-clip").click(function(evt){
-        clipSelectState = 0;
-    });
-
-    jQuery(".editor-timeline").scroll(function(evt){
-        if ( playing ) {
-            updateScrubber();
-        }
-    });
-
-    $("#storyboard").before("<br /><table id='controls_table'><tr><td><div id='pauseplay_button' class='playbutton'></div></td><td id='td_scrubber'><div id='timeline-scrubber'></div></td></tr></table>");
-    $("#pauseplay_button").click(function(evt) {
-        togglePlay();
-    });
-
-    $("#timeline-scrubber").slider({
-        min: 0,
-        max: 100,
-        step: .01,
-        slide: handleScrub
-    });
-
-    //Set size of the scrubber handler
-    $('.ui-slider-handle').height(25);
-    $('.ui-slider-handle').width(25);
-
     function isClipSelected() {
-        return jQuery(".timeline-video-clips").children(".selected").length > 0;
+        return $(".timeline-video-clips").children(".selected").length > 0;
     }
 
     function handleScrub(evt, ui) {
         var value = ui.value;
-        var timelineWidth = jQuery(".editor-timeline")[0].scrollWidth - jQuery(".editor-timeline")[0].clientWidth;
-        jQuery(".editor-timeline").scrollLeft(Math.round((timelineWidth*value)/100));
+        var timelineWidth = $(".editor-timeline")[0].scrollWidth - $(".editor-timeline")[0].clientWidth;
+        $(".editor-timeline").scrollLeft(Math.round((timelineWidth*value)/100));
 
         if ( !isClipSelected() ) {
             //Seek the playhead based on the scrubber position
@@ -301,14 +241,14 @@
     }
 
     function updateScrubber() {
-        var timelineScroll = jQuery(".editor-timeline").scrollLeft();
-        var timelineWidth = jQuery(".editor-timeline")[0].scrollWidth - jQuery(".editor-timeline")[0].clientWidth;
+        var timelineScroll = $(".editor-timeline").scrollLeft();
+        var timelineWidth = $(".editor-timeline")[0].scrollWidth - $(".editor-timeline")[0].clientWidth;
 
         $("#timeline-scrubber").slider('value', Math.round(10000 * timelineScroll/timelineWidth)/100);
     }
 
     function togglePlay() {
-        var player = jQuery("#preview-swf")[0];
+        var player = $("#preview-swf")[0];
 
         if (player.getPlayerState() == 1) {
             playing = false;
@@ -348,273 +288,337 @@
         return Date.parse("01/01/01 00:" + mins + ":" + secs);
     }
 
-    $("#save-changes-message").after(" <span id='play-state-msg' class='play-state-paused'>" + PAUSED_MESSAGE + "</span>");
+    function setupUI() {
+        //Update the timeline scrollbar on every scroll to lock it in place
+        $(".editor-timeline").scroll(function(evt) {
+            updateTimelineScrollbar();
+        });
 
-    //Handle scroll right / left with arrow keys
-    jQuery(document).keydown(function(evt){
-        if ( evt.which == 39 ) { //scrub right
-            var timelineWidth = jQuery(".editor-timeline")[0].scrollWidth - jQuery(".editor-timeline")[0].clientWidth;
-            var timelineScroll = jQuery(".editor-timeline").scrollLeft();
-            timelineScroll = timelineScroll + .1 * timelineWidth;
-            if ( timelineScroll > timelineWidth ) {
-                timelineScroll = timelineWidth;
+        $("#publish-button").click(function(evt) {
+            publishRequested = true; //Leaving the page to publish video
+
+            //Set the has published flag
+            chrome.storage.local.set({hasPublished: true});
+
+            chrome.storage.local.get({
+                 publishCount: 0,
+                 reviewCompleted: false
+            },
+            function(items) {
+                //Increment publishCount and set the prompt for review flag
+                chrome.storage.local.set({publishCount: (items.publishCount+1), promptForReview: !items.reviewCompleted});
+            });
+        });
+
+        window.onbeforeunload = confirmExit;
+
+        $("#page").addClass('promode_active');
+
+        //Deactivate hotkeys when focused in text inputs
+        $("input[type*=text], textarea").focus(function(evt){
+           toggleActive();
+        });
+        $("input[type*=text], textarea").blur(function(evt){
+            toggleActive();
+        });
+
+        //Reset clip select state when clip is clicked
+        $(".timeline-video-clip").click(function(evt){
+            clipSelectState = 0;
+        });
+
+        $(".editor-timeline").scroll(function(evt){
+            if ( playing ) {
+                updateScrubber();
             }
-            jQuery(".editor-timeline").scrollLeft(timelineScroll);
-            updateScrubber();
-        } else if ( evt.which == 37 ) { //scrub left
-            var timelineWidth = jQuery(".editor-timeline")[0].scrollWidth - jQuery(".editor-timeline")[0].clientWidth;
-            var timelineScroll = jQuery(".editor-timeline").scrollLeft();
-            timelineScroll = timelineScroll - .1 * timelineWidth;
-            if ( timelineScroll < 0 ) {
-                timelineScroll = 0;
+        });
+
+        $("#storyboard").before("<br /><table id='controls_table'><tr><td><div id='pauseplay_button' class='playbutton'></div></td><td id='td_scrubber'><div id='timeline-scrubber'></div></td></tr></table>");
+        $("#pauseplay_button").click(function(evt) {
+            togglePlay();
+        });
+
+        $("#timeline-scrubber").slider({
+            min: 0,
+            max: 100,
+            step: .01,
+            slide: handleScrub
+        });
+
+        //Set size of the scrubber handler
+        $('.ui-slider-handle').height(25);
+        $('.ui-slider-handle').width(25);
+
+        $("#save-changes-message").after(" <span id='play-state-msg' class='play-state-paused'>" + PAUSED_MESSAGE + "</span>");
+
+        //Handle scroll right / left with arrow keys
+        $(document).keydown(function(evt){
+            if ( evt.which == 39 ) { //scrub right
+                var timelineWidth = $(".editor-timeline")[0].scrollWidth - $(".editor-timeline")[0].clientWidth;
+                var timelineScroll = $(".editor-timeline").scrollLeft();
+                timelineScroll = timelineScroll + .1 * timelineWidth;
+                if ( timelineScroll > timelineWidth ) {
+                    timelineScroll = timelineWidth;
+                }
+                $(".editor-timeline").scrollLeft(timelineScroll);
+                updateScrubber();
+            } else if ( evt.which == 37 ) { //scrub left
+                var timelineWidth = $(".editor-timeline")[0].scrollWidth - $(".editor-timeline")[0].clientWidth;
+                var timelineScroll = $(".editor-timeline").scrollLeft();
+                timelineScroll = timelineScroll - .1 * timelineWidth;
+                if ( timelineScroll < 0 ) {
+                    timelineScroll = 0;
+                }
+                $(".editor-timeline").scrollLeft(timelineScroll);
+                updateScrubber();
             }
-            jQuery(".editor-timeline").scrollLeft(timelineScroll);
-            updateScrubber();
-        }
-    });
-
-    $("body").append('<div id="yt_dialogs"/>');
-    $("#yt_dialogs").load(chrome.extension.getURL('html/dialogs.html'), function() {
-        $("#yteditorpro_help").modal({'show':false});
-        $("#yteditorpro_changes").modal({'show':false});
-        $("#yteditorpro_review").modal({'show':false});
-        $(".yt_version_label").text(appVersion);
-        $(".yt_appname_label").text(appName);
-
-        $("#watch_demo").click(function(evt) {
-            _gaq.push(['_trackEvent', 'Extension', 'WatchDemo']);
-            window.open('https://www.youtube.com/watch?v=5FshFrRcFrw');
         });
 
-        $("#write_review").click(function(evt) {
-            _gaq.push(['_trackEvent', 'Extension', 'WriteReviewHelpScreen']);
-            chrome.storage.local.set({reviewCompleted: true, promptForReview: false});
-            window.open('https://chrome.google.com/webstore/detail/pro-mode-for-youtube-vide/aenmbapdfjdkanhfppdmmdipakgacanp/reviews');
+        $("body").append('<div id="yt_dialogs"/>');
+        $("#yt_dialogs").load(chrome.extension.getURL('html/dialogs.html'), function() {
+            $("#yteditorpro_help").modal({'show':false});
+            $("#yteditorpro_changes").modal({'show':false});
+            $("#yteditorpro_review").modal({'show':false});
+            $(".yt_version_label").text(appVersion);
+            $(".yt_appname_label").text(appName);
+
+            $("#watch_demo").click(function(evt) {
+                _gaq.push(['_trackEvent', 'Extension', 'WatchDemo']);
+                window.open('https://www.youtube.com/watch?v=5FshFrRcFrw');
+            });
+
+            $("#write_review").click(function(evt) {
+                _gaq.push(['_trackEvent', 'Extension', 'WriteReviewHelpScreen']);
+                chrome.storage.local.set({reviewCompleted: true, promptForReview: false});
+                window.open('https://chrome.google.com/webstore/detail/pro-mode-for-youtube-vide/aenmbapdfjdkanhfppdmmdipakgacanp/reviews');
+            });
+
+            $("#whats_new").click(function(evt) {
+                _gaq.push(['_trackEvent', 'Extension', 'WhatsNewHelpScreen']);
+                $("#yteditorpro_changes").modal('toggle');
+                $("#yteditorpro_help").modal('toggle');
+            });
+
+            $("#get_help").click(function(evt) {
+                _gaq.push(['_trackEvent', 'Extension', 'ClickSupport']);
+                window.open('https://chrome.google.com/webstore/detail/pro-mode-for-youtube-vide/aenmbapdfjdkanhfppdmmdipakgacanp/support');
+            });
+
+            $("#review_ok").click(function(evt) {
+                _gaq.push(['_trackEvent', 'Extension', 'ReviewOk']);
+                chrome.storage.local.set({reviewCompleted: true, promptForReview: false});
+                window.open('https://chrome.google.com/webstore/detail/pro-mode-for-youtube-vide/aenmbapdfjdkanhfppdmmdipakgacanp/reviews');
+                $("#yteditorpro_review").modal('toggle');
+            });
+
+            $("#review_no").click(function(evt) {
+                _gaq.push(['_trackEvent', 'Extension', 'ReviewNo']);
+                chrome.storage.local.set({reviewCompleted: true, promptForReview: false});
+                $("#yteditorpro_review").modal('toggle');
+            });
+
+            $("#review_later").click(function(evt) {
+                _gaq.push(['_trackEvent', 'Extension', 'ReviewLater']);
+                chrome.storage.local.set({promptForReview: false});
+                $("#yteditorpro_review").modal('toggle');
+            });
         });
 
-        $("#whats_new").click(function(evt) {
-            _gaq.push(['_trackEvent', 'Extension', 'WhatsNewHelpScreen']);
-            $("#yteditorpro_changes").modal('toggle');
-            $("#yteditorpro_help").modal('toggle');
-        });
+        //Hotkeys
+        $(document).keypress(
+            function(event) {
+                if ( event.which == 1 ) { //CTRL-A
+                    _gaq.push(['_trackEvent', 'Hotkey', 'ToggleActive']);
+                    toggleActive();
+                }
 
-        $("#get_help").click(function(evt) {
-            _gaq.push(['_trackEvent', 'Extension', 'ClickSupport']);
-            window.open('https://chrome.google.com/webstore/detail/pro-mode-for-youtube-vide/aenmbapdfjdkanhfppdmmdipakgacanp/support');
-        });
+                if ( active ) {
+                    if ( event.which == 99 ) { //C - Close current window
+                        _gaq.push(['_trackEvent', 'Hotkey', 'CloseWindow']);
+                        $(".close-button")[0].click();
+                        $(".close-button")[1].click();
+                    } else if ( event.which == 32 ) { //Spacebar - Pause/Play video
+                        _gaq.push(['_trackEvent', 'Hotkey', 'PausePlay']);
+                        event.preventDefault();
 
-        $("#review_ok").click(function(evt) {
-            _gaq.push(['_trackEvent', 'Extension', 'ReviewOk']);
-            chrome.storage.local.set({reviewCompleted: true, promptForReview: false});
-            window.open('https://chrome.google.com/webstore/detail/pro-mode-for-youtube-vide/aenmbapdfjdkanhfppdmmdipakgacanp/reviews');
-            $("#yteditorpro_review").modal('toggle');
-        });
-
-        $("#review_no").click(function(evt) {
-            _gaq.push(['_trackEvent', 'Extension', 'ReviewNo']);
-            chrome.storage.local.set({reviewCompleted: true, promptForReview: false});
-            $("#yteditorpro_review").modal('toggle');
-        });
-
-        $("#review_later").click(function(evt) {
-            _gaq.push(['_trackEvent', 'Extension', 'ReviewLater']);
-            chrome.storage.local.set({promptForReview: false});
-            $("#yteditorpro_review").modal('toggle');
-        });
-    });
-
-    //Hotkeys
-    jQuery(document).keypress(
-        function(event) {
-            if ( event.which == 1 ) { //CTRL-A
-                _gaq.push(['_trackEvent', 'Hotkey', 'ToggleActive']);
-                toggleActive();
-            }
-
-            if ( active ) {
-                if ( event.which == 99 ) { //C - Close current window
-                    _gaq.push(['_trackEvent', 'Hotkey', 'CloseWindow']);
-                    jQuery(".close-button")[0].click();
-                    jQuery(".close-button")[1].click();
-                } else if ( event.which == 32 ) { //Spacebar - Pause/Play video
-                    _gaq.push(['_trackEvent', 'Hotkey', 'PausePlay']);
-                    event.preventDefault();
-
-                    togglePlay();
-                } else if ( event.which == 115 ) { //S - sort thumbnails
-                    _gaq.push(['_trackEvent', 'Hotkey', 'SortThumbnails']);
-                    if ( jQuery("#images-tab").attr('class').indexOf('selected') != -1 ) {
-                        var parent = jQuery(jQuery(".image-original")[0]).parent();
-                        var images = jQuery(".image-original").detach();
-                        images.sort(function(a,b){
-                            var urlA = jQuery(a).find("img").css('background-image');
-                            urlA = urlA.substring(urlA.lastIndexOf('/')+1);
-                            var urlB = jQuery(b).find("img").css('background-image');
-                            urlB = urlB.substring(urlB.lastIndexOf('/')+1);
-                            return urlA.localeCompare(urlB);
-                        });
-                        images.appendTo(parent);
-                    }
-                } else if ( event.which == 107) { //K - ken burns effect
-                    _gaq.push(['_trackEvent', 'Hotkey', 'KenBurns']);
-                    jQuery("input[effectid*='KEN_BURNS']").click();
-                } else if ( event.which == 43) { //+ key increase by one second selected clip
-                    _gaq.push(['_trackEvent', 'Hotkey', 'Increase1S']);
-
-                    var handle = jQuery(".timeline-video-clips").children(".selected").find(".right-trimmer").find(".knurling-area");
-                    if ( handle && handle.length > 0 ) {
-                        var timeSpan = jQuery(".timeline-video-clips").children(".selected").find(".editor-thumb-time");
-                        if (timeSpan && timeSpan.length > 0) {
-                            var startTime = parseClipTime(timeSpan[0].textContent);
-                            var moveX = 0;
-                            syn.simulate(handle[0], "mousedown", { pointerX: moveX, pointerY: 0 });
-                            while (true) {
-                                moveX += 1;
-                                syn.simulate(handle[0], "mousemove", { pointerX: moveX, pointerY: 0 });
-                                if ((parseClipTime(timeSpan[0].textContent) - startTime)>= 1000 || moveX > 1000) {
-                                    break;
-                                }
-                            }
-                            syn.simulate(handle[0], "mouseup");
+                        togglePlay();
+                    } else if ( event.which == 115 ) { //S - sort thumbnails
+                        _gaq.push(['_trackEvent', 'Hotkey', 'SortThumbnails']);
+                        if ( $("#images-tab").attr('class').indexOf('selected') != -1 ) {
+                            var parent = $($(".image-original")[0]).parent();
+                            var images = $(".image-original").detach();
+                            images.sort(function(a,b){
+                                var urlA = $(a).find("img").css('background-image');
+                                urlA = urlA.substring(urlA.lastIndexOf('/')+1);
+                                var urlB = $(b).find("img").css('background-image');
+                                urlB = urlB.substring(urlB.lastIndexOf('/')+1);
+                                return urlA.localeCompare(urlB);
+                            });
+                            images.appendTo(parent);
                         }
-                    }
-                } else if ( event.which == 45) { //- key decrease by one second selected clip
-                    _gaq.push(['_trackEvent', 'Hotkey', 'Decrease1S']);
-                    var handle = jQuery(".timeline-video-clips").children(".selected").find(".right-trimmer").find(".knurling-area");
-                    if ( handle && handle.length > 0 ) {
-                        var timeSpan = jQuery(".timeline-video-clips").children(".selected").find(".editor-thumb-time");
-                        if (timeSpan && timeSpan.length > 0) {
-                            var currentTimeLabel = timeSpan[0].textContent;
-                            if ( currentTimeLabel !== "0:01" && currentTimeLabel !== "0:00" ) {
-                                var startTime = parseClipTime(currentTimeLabel);
-                                var moveX = 1000;
+                    } else if ( event.which == 107) { //K - ken burns effect
+                        _gaq.push(['_trackEvent', 'Hotkey', 'KenBurns']);
+                        $("input[effectid*='KEN_BURNS']").click();
+                    } else if ( event.which == 43) { //+ key increase by one second selected clip
+                        _gaq.push(['_trackEvent', 'Hotkey', 'Increase1S']);
+
+                        var handle = $(".timeline-video-clips").children(".selected").find(".right-trimmer").find(".knurling-area");
+                        if ( handle && handle.length > 0 ) {
+                            var timeSpan = $(".timeline-video-clips").children(".selected").find(".editor-thumb-time");
+                            if (timeSpan && timeSpan.length > 0) {
+                                var startTime = parseClipTime(timeSpan[0].textContent);
+                                var moveX = 0;
                                 syn.simulate(handle[0], "mousedown", { pointerX: moveX, pointerY: 0 });
                                 while (true) {
-                                    moveX -= 1;
+                                    moveX += 1;
                                     syn.simulate(handle[0], "mousemove", { pointerX: moveX, pointerY: 0 });
-                                    if ((startTime - parseClipTime(timeSpan[0].textContent)) >= 1000 || moveX <= 0) {
+                                    if ((parseClipTime(timeSpan[0].textContent) - startTime)>= 1000 || moveX > 1000) {
                                         break;
                                     }
                                 }
                                 syn.simulate(handle[0], "mouseup");
                             }
                         }
-                    }
-                } else if ( event.which == 49) { //1 - video tab
-                    _gaq.push(['_trackEvent', 'Hotkey', 'VideoTab']);
-                    if (jQuery("#mediapicker-infobox").attr('class') == "infobox-visible") {
-                        jQuery("#mediapicker-infobox").toggleClass("mediapicker-visible");
-                        jQuery("#mediapicker-infobox").toggleClass("infobox-visible");
-                    }
-                    jQuery("#video-tab").click();
-                } else if ( event.which == 50) { //2 - copyright tab
-                    _gaq.push(['_trackEvent', 'Hotkey', 'CopyrightTab']);
-                    if (jQuery("#mediapicker-infobox").attr('class') == "infobox-visible") {
-                        jQuery("#mediapicker-infobox").toggleClass("mediapicker-visible");
-                        jQuery("#mediapicker-infobox").toggleClass("infobox-visible");
-                    }
-                    jQuery("#cc-tab").click();
-                } else if ( event.which == 51) { //3 images tab
-                    _gaq.push(['_trackEvent', 'Hotkey', 'ImagesTab']);
-                    if (jQuery("#mediapicker-infobox").attr('class') == "infobox-visible") {
-                        jQuery("#mediapicker-infobox").toggleClass("mediapicker-visible");
-                        jQuery("#mediapicker-infobox").toggleClass("infobox-visible");
-                    }
-                    jQuery("#images-tab").click();
-                } else if ( event.which == 52) { //4 audio tab
-                    _gaq.push(['_trackEvent', 'Hotkey', 'AudioTab']);
-                    if (jQuery("#mediapicker-infobox").attr('class') == "infobox-visible") {
-                        jQuery("#mediapicker-infobox").toggleClass("mediapicker-visible");
-                        jQuery("#mediapicker-infobox").toggleClass("infobox-visible");
-                    }
-                    jQuery("#audio-tab").click();
-                } else if ( event.which == 53) { //5 transitions tab
-                    _gaq.push(['_trackEvent', 'Hotkey', 'VideoTab']);
-                    if (jQuery("#mediapicker-infobox").attr('class') == "infobox-visible") {
-                        jQuery("#mediapicker-infobox").toggleClass("mediapicker-visible");
-                        jQuery("#mediapicker-infobox").toggleClass("infobox-visible");
-                    }
-                    jQuery("#transition-tab").click();
-                } else if ( event.which == 54) { //6 text tab
-                    _gaq.push(['_trackEvent', 'Hotkey', 'TextTab']);
-                    if (jQuery("#mediapicker-infobox").attr('class') == "infobox-visible") {
-                        jQuery("#mediapicker-infobox").toggleClass("mediapicker-visible");
-                        jQuery("#mediapicker-infobox").toggleClass("infobox-visible");
-                    }
-                    jQuery("#text-tab").click();
-                } else if ( event.which == 112 ) { //P - focus current clip
-                    _gaq.push(['_trackEvent', 'Hotkey', 'FocusCurrent']);
-
-                    var offset = jQuery(".timeline-video-clips").children(".selected").css('left');
-                    if ( offset ) {
-                        if ( clipSelectState === 0 ) {
-                            //Scroll to start of clip
-                            jQuery(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))));
-                            clipSelectState = 1;
-                        } else if ( clipSelectState === 1 ) {
-                            //Scroll to end of clip
-                            var width = jQuery(".timeline-video-clips").children(".selected").width();
-                            jQuery(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))) + width);
-                            clipSelectState = 0;
+                    } else if ( event.which == 45) { //- key decrease by one second selected clip
+                        _gaq.push(['_trackEvent', 'Hotkey', 'Decrease1S']);
+                        var handle = $(".timeline-video-clips").children(".selected").find(".right-trimmer").find(".knurling-area");
+                        if ( handle && handle.length > 0 ) {
+                            var timeSpan = $(".timeline-video-clips").children(".selected").find(".editor-thumb-time");
+                            if (timeSpan && timeSpan.length > 0) {
+                                var currentTimeLabel = timeSpan[0].textContent;
+                                if ( currentTimeLabel !== "0:01" && currentTimeLabel !== "0:00" ) {
+                                    var startTime = parseClipTime(currentTimeLabel);
+                                    var moveX = 1000;
+                                    syn.simulate(handle[0], "mousedown", { pointerX: moveX, pointerY: 0 });
+                                    while (true) {
+                                        moveX -= 1;
+                                        syn.simulate(handle[0], "mousemove", { pointerX: moveX, pointerY: 0 });
+                                        if ((startTime - parseClipTime(timeSpan[0].textContent)) >= 1000 || moveX <= 0) {
+                                            break;
+                                        }
+                                    }
+                                    syn.simulate(handle[0], "mouseup");
+                                }
+                            }
                         }
-                    }
-                    updateScrubber();
-                } else if ( event.which == 91 ) { // [ - focus start
-                    _gaq.push(['_trackEvent', 'Hotkey', 'FocusStart']);
-                    jQuery(".editor-timeline").scrollLeft(0);
-                    updateScrubber();
-                } else if ( event.which == 93 ) { // ] - focus end
-                    _gaq.push(['_trackEvent', 'Hotkey', 'FocusEnd']);
-                    var offset = jQuery(".timeline-video-clips").children().last().css('left');
-                    jQuery(".editor-timeline").scrollLeft(offset.substring(0,offset.lastIndexOf("px")));
-                    updateScrubber();
-                } else if ( event.which == 104 ) { // H - show help
-                    _gaq.push(['_trackEvent', 'Hotkey', 'ToggleHelp']);
-                    $("#yteditorpro_help").modal('toggle');
-                } else if ( event.which == 46 ) { // . - next clip in timeline
-                    _gaq.push(['_trackEvent', 'Hotkey', 'NextClip']);
-
-                    var nextClip = undefined;
-                    if ( jQuery(".timeline-video-clips").children(".selected").length === 0 ) {
-                        if (jQuery(".timeline-video-clips").children().length > 0) {
-                            nextClip = jQuery(".timeline-video-clips").children().first();
+                    } else if ( event.which == 49) { //1 - video tab
+                        _gaq.push(['_trackEvent', 'Hotkey', 'VideoTab']);
+                        if ($("#mediapicker-infobox").attr('class') == "infobox-visible") {
+                            $("#mediapicker-infobox").toggleClass("mediapicker-visible");
+                            $("#mediapicker-infobox").toggleClass("infobox-visible");
                         }
-                    } else {
-                        nextClip = jQuery(".timeline-video-clips").children(".selected").next();
-                    }
+                        $("#video-tab").click();
+                    } else if ( event.which == 50) { //2 - copyright tab
+                        _gaq.push(['_trackEvent', 'Hotkey', 'CopyrightTab']);
+                        if ($("#mediapicker-infobox").attr('class') == "infobox-visible") {
+                            $("#mediapicker-infobox").toggleClass("mediapicker-visible");
+                            $("#mediapicker-infobox").toggleClass("infobox-visible");
+                        }
+                        $("#cc-tab").click();
+                    } else if ( event.which == 51) { //3 images tab
+                        _gaq.push(['_trackEvent', 'Hotkey', 'ImagesTab']);
+                        if ($("#mediapicker-infobox").attr('class') == "infobox-visible") {
+                            $("#mediapicker-infobox").toggleClass("mediapicker-visible");
+                            $("#mediapicker-infobox").toggleClass("infobox-visible");
+                        }
+                        $("#images-tab").click();
+                    } else if ( event.which == 52) { //4 audio tab
+                        _gaq.push(['_trackEvent', 'Hotkey', 'AudioTab']);
+                        if ($("#mediapicker-infobox").attr('class') == "infobox-visible") {
+                            $("#mediapicker-infobox").toggleClass("mediapicker-visible");
+                            $("#mediapicker-infobox").toggleClass("infobox-visible");
+                        }
+                        $("#audio-tab").click();
+                    } else if ( event.which == 53) { //5 transitions tab
+                        _gaq.push(['_trackEvent', 'Hotkey', 'VideoTab']);
+                        if ($("#mediapicker-infobox").attr('class') == "infobox-visible") {
+                            $("#mediapicker-infobox").toggleClass("mediapicker-visible");
+                            $("#mediapicker-infobox").toggleClass("infobox-visible");
+                        }
+                        $("#transition-tab").click();
+                    } else if ( event.which == 54) { //6 text tab
+                        _gaq.push(['_trackEvent', 'Hotkey', 'TextTab']);
+                        if ($("#mediapicker-infobox").attr('class') == "infobox-visible") {
+                            $("#mediapicker-infobox").toggleClass("mediapicker-visible");
+                            $("#mediapicker-infobox").toggleClass("infobox-visible");
+                        }
+                        $("#text-tab").click();
+                    } else if ( event.which == 112 ) { //P - focus current clip
+                        _gaq.push(['_trackEvent', 'Hotkey', 'FocusCurrent']);
 
-                    if ( nextClip ) {
-                        nextClip.click();
-                        var offset = nextClip.css('left');
+                        var offset = $(".timeline-video-clips").children(".selected").css('left');
                         if ( offset ) {
-                            jQuery(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))));
+                            if ( clipSelectState === 0 ) {
+                                //Scroll to start of clip
+                                $(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))));
+                                clipSelectState = 1;
+                            } else if ( clipSelectState === 1 ) {
+                                //Scroll to end of clip
+                                var width = $(".timeline-video-clips").children(".selected").width();
+                                $(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))) + width);
+                                clipSelectState = 0;
+                            }
                         }
-                    }
+                        updateScrubber();
+                    } else if ( event.which == 91 ) { // [ - focus start
+                        _gaq.push(['_trackEvent', 'Hotkey', 'FocusStart']);
+                        $(".editor-timeline").scrollLeft(0);
+                        updateScrubber();
+                    } else if ( event.which == 93 ) { // ] - focus end
+                        _gaq.push(['_trackEvent', 'Hotkey', 'FocusEnd']);
+                        var offset = $(".timeline-video-clips").children().last().css('left');
+                        $(".editor-timeline").scrollLeft(offset.substring(0,offset.lastIndexOf("px")));
+                        updateScrubber();
+                    } else if ( event.which == 104 ) { // H - show help
+                        _gaq.push(['_trackEvent', 'Hotkey', 'ToggleHelp']);
+                        $("#yteditorpro_help").modal('toggle');
+                    } else if ( event.which == 46 ) { // . - next clip in timeline
+                        _gaq.push(['_trackEvent', 'Hotkey', 'NextClip']);
 
-                    updateScrubber();
-                } else if ( event.which == 44 ) { // , - previous clip in timeline
-                    _gaq.push(['_trackEvent', 'Hotkey', 'PrevClip']);
-
-                    var prevClip = undefined;
-                    if ( jQuery(".timeline-video-clips").children(".selected").length === 0 ) {
-                        if (jQuery(".timeline-video-clips").children().length > 0) {
-                            prevClip = jQuery(jQuery(".timeline-video-clips").children().first());
+                        var nextClip = undefined;
+                        if ( $(".timeline-video-clips").children(".selected").length === 0 ) {
+                            if ($(".timeline-video-clips").children().length > 0) {
+                                nextClip = $(".timeline-video-clips").children().first();
+                            }
+                        } else {
+                            nextClip = $(".timeline-video-clips").children(".selected").next();
                         }
-                    } else {
-                        prevClip = jQuery(".timeline-video-clips").children(".selected").prev();
-                    }
 
-                    if ( prevClip ) {
-                        prevClip.click();
-                        var offset = prevClip.css('left');
-                        if ( offset ) {
-                            jQuery(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))));
+                        if ( nextClip ) {
+                            nextClip.click();
+                            var offset = nextClip.css('left');
+                            if ( offset ) {
+                                $(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))));
+                            }
                         }
-                    }
 
-                    updateScrubber();
+                        updateScrubber();
+                    } else if ( event.which == 44 ) { // , - previous clip in timeline
+                        _gaq.push(['_trackEvent', 'Hotkey', 'PrevClip']);
+
+                        var prevClip = undefined;
+                        if ( $(".timeline-video-clips").children(".selected").length === 0 ) {
+                            if ($(".timeline-video-clips").children().length > 0) {
+                                prevClip = $($(".timeline-video-clips").children().first());
+                            }
+                        } else {
+                            prevClip = $(".timeline-video-clips").children(".selected").prev();
+                        }
+
+                        if ( prevClip ) {
+                            prevClip.click();
+                            var offset = prevClip.css('left');
+                            if ( offset ) {
+                                $(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))));
+                            }
+                        }
+
+                        updateScrubber();
+                    }
                 }
             }
-        }
-    );
+        );
+    }
+
+    initialize();
 })();
