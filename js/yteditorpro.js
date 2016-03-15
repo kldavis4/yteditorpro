@@ -17,7 +17,6 @@
     var PAUSED_MESSAGE = "Paused (spacebar to play)";
     var PLAYING_MESSAGE = "Playing (spacebar to pause)";
 
-    var self = this;
     var active = true;
     var publishRequested = false;
     var playing = false;
