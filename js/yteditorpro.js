@@ -214,12 +214,12 @@
 
         if ( active ) {
             $("#page").addClass('promode_active');
-            $("#timeline-scrubber").show();
-            $("#pauseplay_button").show();
+            $("#controls_table").show();
+            $("#play-state-msg").show();
         } else {
             $("#page").removeClass('promode_active');
-            $("#timeline-scrubber").hide();
-            $("#pauseplay_button").hide();
+            $("#controls_table").hide();
+            $("#play-state-msg").hide();
         }
 
         updateTimelineScrollbar();
@@ -333,7 +333,7 @@
             }
         });
 
-        $("#storyboard").before("<br /><table id='controls_table'><tr><td><div id='pauseplay_button' class='playbutton'></div></td><td id='td_scrubber'><div id='timeline-scrubber'></div></td></tr></table>");
+        $("#storyboard").before("<table id='controls_table'><tr><td><div id='pauseplay_button' class='playbutton'></div></td><td id='td_scrubber'><div id='timeline-scrubber'></div></td></tr></table>");
         $("#pauseplay_button").click(function(evt) {
             togglePlay();
         });
