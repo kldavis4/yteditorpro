@@ -70,3 +70,8 @@ li.list-group-item:before {
 #td_scrubber {
     width: 100%;
 }
+
+.yt_tab_hotkey_label {
+    float: right;
+    font-size: x-small;
+}

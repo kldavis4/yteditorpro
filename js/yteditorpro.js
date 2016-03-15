@@ -216,10 +216,12 @@
             $("#page").addClass('promode_active');
             $("#controls_table").show();
             $("#play-state-msg").show();
+            $(".yt_tab_hotkey_label").show();
         } else {
             $("#page").removeClass('promode_active');
             $("#controls_table").hide();
             $("#play-state-msg").hide();
+            $(".yt_tab_hotkey_label").hide();
         }
 
         updateTimelineScrollbar();
@@ -350,6 +352,14 @@
         $('.ui-slider-handle').width(25);
 
         $("#save-changes-message").after(" <span id='play-state-msg' class='play-state-paused'>" + PAUSED_MESSAGE + "</span>");
+
+        //Tab hotkey indicators
+        $("#video-tab").append('<span class="yt_tab_hotkey_label">1</span>');
+        $("#cc-tab").append('<span class="yt_tab_hotkey_label">2</span>');
+        $("#images-tab").append('<span class="yt_tab_hotkey_label">3</span>');
+        $("#audio-tab").append('<span class="yt_tab_hotkey_label">4</span>');
+        $("#transition-tab").append('<span class="yt_tab_hotkey_label">5</span>');
+        $("#text-tab").append('<span class="yt_tab_hotkey_label">6</span>');
 
         //Handle scroll right / left with arrow keys
         $(document).keydown(function(evt){
