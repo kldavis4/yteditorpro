@@ -152,13 +152,22 @@
                 updateAudioPreviewClickHandlers();
             });
 
-            //Setup the thumb preview buttons so they set the viewPreviewRequested flag
-            //and update every time the list of audio changes
             $("#video-media-list").bind("DOMSubtreeModified", function(evt) {
                 updateVideoPreviewClickHandlers();
+                updateVideoAddClickHandlers()
             });
             $("#video-tab").click(function(evt) {
                 updateVideoPreviewClickHandlers();
+                updateVideoAddClickHandlers()
+            });
+
+            //Setup the thumb preview buttons so they set the viewPreviewRequested flag
+            //and update every time the list of audio changes
+            $("#images-media-list").bind("DOMSubtreeModified", function(evt) {
+                updateImageAddClickHandlers();
+            });
+            $("#images-tab").click(function(evt) {
+                updateImageAddClickHandlers();
             });
         }
     }
@@ -177,6 +186,26 @@
             videoPreviewRequested = true;
         });
         $(".thumb-play").not(".yte_flagged").addClass("yte_flagged");
+    }
+
+    function updateVideoAddClickHandlers() {
+        //Fix the add video button to focus on the newly added clip
+        $("#video-media-list").find(".thumb-add").not(".yte_flagged").click(function(evt) {
+            $(".timeline-video-clips").one("DOMSubtreeModified", function(evt) {
+                focusLastClip();
+            });
+        });
+        $("#video-media-list").find(".thumb-add").not(".yte_flagged").addClass("yte_flagged");
+    }
+
+    function updateImageAddClickHandlers() {
+        //Fix the add image button to focus on the newly added clip
+        $("#images-tab-body").find(".thumb-add").not(".yte_flagged").click(function(evt) {
+            $(".timeline-video-clips").one("DOMSubtreeModified", function(evt) {
+                focusLastClip();
+            });
+        });
+        $("#images-tab-body").find(".thumb-add").not(".yte_flagged").addClass("yte_flagged");
     }
 
     function updateTimelineScrollbar() {
@@ -274,6 +303,20 @@
         }
 
         updateTimelineScrollbar();
+    }
+
+    function focusLastClip() {
+        //Focus on the new clip that was added
+        var newClip = $(".timeline-video-clips").children().last();
+        if ( newClip ) {
+            newClip.click();
+
+            //Scroll to the end of the clip
+            var editorTimeline = $(".editor-timeline");
+            editorTimeline.scrollLeft(editorTimeline.find(".scroll-content").width());
+
+            updateScrubber();
+        }
     }
 
     function parseClipTime(time) {
@@ -439,17 +482,7 @@
         //
         $(".video-thumblist").keydown(function(event) {
             if ( event.which == 13 ) {
-                //Focus on the new clip that was added
-                var newClip = $(".timeline-video-clips").children().last();
-                if ( newClip ) {
-                    newClip.click();
-                    var offset = newClip.css('left');
-                    if ( offset ) {
-                        $(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))));
-                    }
-
-                    updateScrubber();
-                }
+                focusLastClip();
             } else if ( event.which == 32 ) {
                 videoPreviewRequested = true;
             }
