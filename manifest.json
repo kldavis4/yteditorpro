@@ -13,8 +13,8 @@
   "content_scripts": [
     {
       "matches": ["*://*.youtube.com/editor*"],
-      "css": ["css/jquery-ui.css","css/jquery-ui.structure.css","css/style.css","css/bootstrap.css"],
-      "js": ["js/jquery-1.11.1.min.js","js/jquery-ui.js","js/bootstrap.js","js/syn.js","js/yteditorpro.js"]
+      "css": ["css/jquery-ui.css","css/jquery-ui.structure.css","css/style.css","css/bootstrap.css", "css/toastr.min.css"],
+      "js": ["js/jquery-1.11.1.min.js","js/jquery-ui.js","js/bootstrap.js","js/syn.js","js/toastr.min.js","js/yteditorpro.js"]
     }
   ],
   "web_accessible_resources": [

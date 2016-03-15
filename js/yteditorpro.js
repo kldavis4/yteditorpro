@@ -216,11 +216,13 @@
             $("#controls_table").show();
             $("#play-state-msg").show();
             $(".yt_tab_hotkey_label").show();
+            toastr["info"]("Activated");
         } else {
             $("#page").removeClass('promode_active');
             $("#controls_table").hide();
             $("#play-state-msg").hide();
             $(".yt_tab_hotkey_label").hide();
+            toastr["info"]("Deactivated");
         }
 
         updateTimelineScrollbar();
@@ -484,10 +486,12 @@
                                 return urlA.localeCompare(urlB);
                             });
                             images.appendTo(parent);
+                            toastr["info"]("Photos sorted alphabetically");
                         }
                     } else if ( event.which == 107) { //K - ken burns effect
                         _gaq.push(['_trackEvent', 'Hotkey', 'KenBurns']);
                         $("input[effectid*='KEN_BURNS']").click();
+                        toastr["info"]("Pan & Zoom toggled");
                     } else if ( event.which == 43) { //+ key increase by one second selected clip
                         _gaq.push(['_trackEvent', 'Hotkey', 'Increase1S']);
 
@@ -506,6 +510,7 @@
                                     }
                                 }
                                 syn.simulate(handle[0], "mouseup");
+                                toastr["info"]("Clip increased");
                             }
                         }
                     } else if ( event.which == 45) { //- key decrease by one second selected clip
@@ -527,6 +532,7 @@
                                         }
                                     }
                                     syn.simulate(handle[0], "mouseup");
+                                    toastr["info"]("Clip decreased");
                                 }
                             }
                         }
@@ -581,11 +587,13 @@
                                 //Scroll to start of clip
                                 $(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))));
                                 clipSelectState = 1;
+                                toastr["info"]("Start of selected clip");
                             } else if ( clipSelectState === 1 ) {
                                 //Scroll to end of clip
                                 var width = $(".timeline-video-clips").children(".selected").width();
                                 $(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))) + width);
                                 clipSelectState = 0;
+                                toastr["info"]("End of selected clip");
                             }
                         }
                         updateScrubber();
@@ -593,11 +601,13 @@
                         _gaq.push(['_trackEvent', 'Hotkey', 'FocusStart']);
                         $(".editor-timeline").scrollLeft(0);
                         updateScrubber();
+                        toastr["info"]("Start of timeline");
                     } else if ( event.which == 93 ) { // ] - focus end
                         _gaq.push(['_trackEvent', 'Hotkey', 'FocusEnd']);
                         var offset = $(".timeline-video-clips").children().last().css('left');
                         $(".editor-timeline").scrollLeft(offset.substring(0,offset.lastIndexOf("px")));
                         updateScrubber();
+                        toastr["info"]("End of timeline");
                     } else if ( event.which == 104 ) { // H - show help
                         _gaq.push(['_trackEvent', 'Hotkey', 'ToggleHelp']);
                         $("#yteditorpro_help").modal('toggle');
@@ -619,6 +629,7 @@
                             if ( offset ) {
                                 $(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))));
                             }
+                            toastr["info"]("Select next clip");
                         }
 
                         updateScrubber();
@@ -640,6 +651,7 @@
                             if ( offset ) {
                                 $(".editor-timeline").scrollLeft(parseInt(offset.substring(0,offset.lastIndexOf("px"))));
                             }
+                            toastr["info"]("Select previous clip");
                         }
 
                         updateScrubber();
@@ -647,6 +659,24 @@
                 }
             }
         );
+
+        toastr.options = {
+          "closeButton": false,
+          "debug": false,
+          "newestOnTop": false,
+          "progressBar": false,
+          "positionClass": "toast-bottom-center",
+          "preventDuplicates": false,
+          "onclick": null,
+          "showDuration": "100",
+          "hideDuration": "400",
+          "timeOut": "1200",
+          "extendedTimeOut": "1000",
+          "showEasing": "swing",
+          "hideEasing": "linear",
+          "showMethod": "fadeIn",
+          "hideMethod": "fadeOut"
+        }
     }
 
     initialize();
