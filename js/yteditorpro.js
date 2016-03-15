@@ -17,14 +17,13 @@
     var PAUSED_MESSAGE = "Paused (spacebar to play)";
     var PLAYING_MESSAGE = "Playing (spacebar to pause)";
 
+    var self = this;
     var active = true;
     var publishRequested = false;
     var playing = false;
     var clipSelectState = 0;
     var initialized = false;
     var duration = 0;
-    var working = false;
-    var self = this;
     var appName = "Pro Mode for YouTube Video Editor";
     var appVersion = 0.1;
     var audioPreviewRequested = false;
@@ -76,7 +75,6 @@
                 }
                 //update the duration
                 duration = preview_swf.getDuration();
-                setWorking(false);
                 break;
         }
     });
@@ -333,10 +331,6 @@
         }
 
         updateTimelineScrollbar();
-    }
-
-    function setWorking(working) {
-        self.working = working;
     }
 
     function parseClipTime(time) {
