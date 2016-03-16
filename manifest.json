@@ -4,7 +4,7 @@
   "name": "Pro Mode for YouTube Video Editor",
   "minimum_chrome_version" : "22.0.0.0",
   "description": "Enables various hotkeys to speed up and generally make YouTube's video editor more usable.",
-  "version": "0.21",
+  "version": "0.22",
   "short_name" : "YTEditorProMode",
   "browser_action": {
     "default_icon": {
