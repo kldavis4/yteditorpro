@@ -216,7 +216,7 @@
             $(".editor-timeline").css('overflow-x', 'hidden');
 
             //Prevent the scrollbar on the timeline from being moved separately from the scrubber
-            var sliderValue = $("#timeline-scrubber").slider('value');
+            var sliderValue = $("#timeline-scrubber").val();
             var timelineWidth = $(".editor-timeline")[0].scrollWidth - $(".editor-timeline")[0].clientWidth;
             var newScroll = Math.round((timelineWidth*sliderValue)/100);
             if ( $(".editor-timeline").scrollLeft() != newScroll) {
@@ -242,13 +242,13 @@
 
         if ( active ) {
             $("#page").addClass('promode_active');
-            $("#controls_table").show();
+            $("#yte_controls_panel").show();
             $("#play-state-msg").show();
             $(".yt_tab_hotkey_label").show();
             toastr["info"]("Activated");
         } else {
             $("#page").removeClass('promode_active');
-            $("#controls_table").hide();
+            $("#yte_controls_panel").hide();
             $("#play-state-msg").hide();
             $(".yt_tab_hotkey_label").hide();
             toastr["info"]("Deactivated");
@@ -261,14 +261,13 @@
         return $(".timeline-video-clips").children(".selected").length > 0;
     }
 
-    function handleScrub(evt, ui) {
-        var value = ui.value;
+    function handleScrub() {
         var timelineWidth = $(".editor-timeline")[0].scrollWidth - $(".editor-timeline")[0].clientWidth;
-        $(".editor-timeline").scrollLeft(Math.round((timelineWidth*value)/100));
+        $(".editor-timeline").scrollLeft(Math.round((timelineWidth * this.value)/100));
 
         if ( !isClipSelected() ) {
             //Seek the playhead based on the scrubber position
-            preview_swf.seekTo((duration*value)/100);
+            preview_swf.seekTo((duration * this.value)/100);
         }
     }
 
@@ -276,7 +275,7 @@
         var timelineScroll = $(".editor-timeline").scrollLeft();
         var timelineWidth = $(".editor-timeline")[0].scrollWidth - $(".editor-timeline")[0].clientWidth;
 
-        $("#timeline-scrubber").slider('value', Math.round(10000 * timelineScroll/timelineWidth)/100);
+        $("#timeline-scrubber").val(Math.round(10000 * timelineScroll/timelineWidth)/100);
     }
 
     function togglePlay() {
@@ -285,7 +284,7 @@
         if (player.getPlayerState() == 1) {
             playing = false;
             player.pauseVideo();
-            $("#timeline-scrubber").slider('enable');
+            $("#timeline-scrubber").prop('disabled',false);
             $("#play-state-msg").text(PAUSED_MESSAGE);
             $("#play-state-msg").toggleClass('play-state-paused');
             $("#play-state-msg").toggleClass('play-state-playing');
@@ -294,7 +293,7 @@
         } else {
             playing = true;
             player.playVideo();
-            $("#timeline-scrubber").slider('disable');
+            $("#timeline-scrubber").prop('disabled',true);
             $("#play-state-msg").text(PLAYING_MESSAGE);
             $("#play-state-msg").toggleClass('play-state-paused');
             $("#play-state-msg").toggleClass('play-state-playing');
@@ -379,21 +378,13 @@
             }
         });
 
-        $("#storyboard").before("<table id='controls_table'><tr><td><div id='pauseplay_button' class='playbutton'></div></td><td id='td_scrubber'><div id='timeline-scrubber'></div></td></tr></table>");
+        $("#storyboard").before("<div id='yte_controls_panel'><div id='pauseplay_button' class='playbutton playpausebutton'></div><input id='timeline-scrubber' type='range' min='0' max='100' value='0'/></div>");
+
         $("#pauseplay_button").click(function(evt) {
             togglePlay();
         });
 
-        $("#timeline-scrubber").slider({
-            min: 0,
-            max: 100,
-            step: .01,
-            slide: handleScrub
-        });
-
-        //Set size of the scrubber handler
-        $('.ui-slider-handle').height(25);
-        $('.ui-slider-handle').width(25);
+        $("#timeline-scrubber").on("input change", handleScrub);
 
         $("#save-changes-message").after(" <span id='play-state-msg' class='play-state-paused'>" + PAUSED_MESSAGE + "</span>");
 

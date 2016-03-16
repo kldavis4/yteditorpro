@@ -1,5 +1,5 @@
 .promode_active {
-    background-color: rgb(255,100,100);
+    background-color: rgba(150, 15, 15, 1);
 }
 
 table.help td {
@@ -28,47 +28,70 @@ li.list-group-item:before {
     font-style: italic;
 }
 
-.ui-widget-content {background: #CE1312;}
-
-.ui-slider-horizontal .ui-state-default {background: white url("chrome-extension://__MSG_@@extension_id__/images/scrubhandle.png") no-repeat scroll 50% 50%;}
-
-#timeline-scrubber {
-    padding: 9px;
+.playpausebutton {
+    background-repeat: no-repeat;
+    width: 40px;
+    height: 40px;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    left: 6px;
+    top: 0px;
+    cursor: pointer;
+    opacity: 1;
 }
 
 .playbutton {
-    background-image: url("chrome-extension://__MSG_@@extension_id__/images/ic_play_circle_filled_black_24dp_2x.png");
-    background-repeat: no-repeat;
-    width: 48px;
-    height: 48px;
-    margin: 0;
-    padding: 0;
-    float: left;
-    cursor: pointer;
+    background-image: url("chrome-extension://__MSG_@@extension_id__/images/ic_play_arrow_black_24dp_2x.png");
 }
 
 .pausebutton {
-    background-image: url("chrome-extension://__MSG_@@extension_id__/images/ic_pause_circle_filled_black_24dp_2x.png");
-    background-repeat: no-repeat;
-    width: 48px;
-    height: 48px;
-    margin: 0;
-    padding: 0;
-    float: left;
+    background-image: url("chrome-extension://__MSG_@@extension_id__/images/ic_pause_black_24dp_2x.png");
 }
 
-#controls_table {
-    width: 100%;
-    border-spacing: 15px;
-    border-collapse: separate;
-    margin-left: 5px;
-    margin-right: 25px;
-    margin-top: 10px;
-    margin-bottom: 5px;
+#yte_controls_panel {
+    position: relative;
+    width: auto;
+    clear: both;
+    margin-left: 20px;
+    margin-right: 20px;
+    background-color: #f0f0f0;
+    background-image: none;
+    padding: 5px;
+    border-top-color: rgb(230, 230, 230);
+    border-top-style: solid;
+    border-top-width: 1px;
+
+    border-left-color: rgb(230, 230, 230);
+    border-left-style: solid;
+    border-left-width: 1px;
+
+    border-right-color: rgb(230, 230, 230);
+    border-right-style: solid;
+    border-right-width: 1px;
 }
 
-#td_scrubber {
-    width: 100%;
+input[type=range] {
+    -webkit-appearance: none;
+    background-color: rgba(204, 24, 30, .8);
+    width: -webkit-calc(100% - 60px);
+    height: 40px;
+    margin-left: 60px;
+    border: solid 1px rgba(150, 15, 15, 1);
+    cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+     -webkit-appearance: none;
+    background-color: #666;
+    opacity: 0.7;
+    width: 20px;
+    height: 36px;
+    border: solid 1px #888;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    opacity: 0.9;
 }
 
 .yt_tab_hotkey_label {
