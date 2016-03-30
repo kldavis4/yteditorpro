@@ -192,7 +192,7 @@
         //Fix the add video button to focus on the newly added clip
         $(".video-thumblist").find(".thumb-add").not(".yte_flagged").click(function(evt) {
             $(".timeline-video-clips").one("DOMSubtreeModified", function(evt) {
-                focusLastClip();
+                scrubToLastClip(false);
             });
         });
         $(".video-thumblist").find(".thumb-add").not(".yte_flagged").addClass("yte_flagged");
@@ -202,7 +202,7 @@
         //Fix the add image button to focus on the newly added clip
         $("#images-tab-body").find(".thumb-add").not(".yte_flagged").click(function(evt) {
             $(".timeline-video-clips").one("DOMSubtreeModified", function(evt) {
-                focusLastClip();
+                scrubToLastClip(false);
             });
         });
         $("#images-tab-body").find(".thumb-add").not(".yte_flagged").addClass("yte_flagged");
@@ -304,11 +304,13 @@
         updateTimelineScrollbar();
     }
 
-    function focusLastClip() {
+    function scrubToLastClip(focus) {
         //Focus on the new clip that was added
         var newClip = $(".timeline-video-clips").children().last();
         if ( newClip ) {
-            newClip.click();
+            if ( focus ) {
+                newClip.click();
+            }
 
             //Scroll to the end of the clip
             var editorTimeline = $(".editor-timeline");
@@ -473,7 +475,7 @@
         //
         $(".video-thumblist").keydown(function(event) {
             if ( event.which == 13 ) {
-                focusLastClip();
+                scrubToLastClip(false);
             } else if ( event.which == 32 ) {
                 videoPreviewRequested = true;
             }
