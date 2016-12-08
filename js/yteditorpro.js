@@ -335,6 +335,10 @@
         return Date.parse("01/01/01 00:" + mins + ":" + secs);
     }
 
+	function handleUpload() {
+		window.location = 'https://www.youtube.com/upload';
+	}
+
     function setupUI() {
         //Update the timeline scrollbar on every scroll to lock it in place
         $(".editor-timeline").scroll(function(evt) {
@@ -389,6 +393,10 @@
         $("#timeline-scrubber").on("input change", handleScrub);
 
         $("#save-changes-message").after(" <span id='play-state-msg' class='play-state-paused'>" + PAUSED_MESSAGE + "</span>");
+
+		//Add upload button
+		$("#publish-button").after("<button class='yt-uix-button yt-uix-button-size-default yt-uix-button-primary' style='float: right;' type='button' id='upload-button'><span class='yt-uix-button-content'>Upload video</span></button>");
+		$("#upload-button").on("click", handleUpload);
 
         //Tab hotkey indicators
         $("#video-tab").append('<span class="yt_tab_hotkey_label">1</span>');
