@@ -1,6 +1,7 @@
 # yteditorpro
 Pro Mode for YouTube Video Editor Chrome Extension
 
+
 ## Introduction
 Pro Mode for YouTube Video Editor is a Chrome extension which enhances the YouTube Video Editor with keyboard shortcuts and other usability improvements. It was born of many frustrations associating with editing lengthy videos using the video editor. I plan to continue improving this as needed and pull requests are welcome :)
 
