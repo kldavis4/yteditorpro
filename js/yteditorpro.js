@@ -430,7 +430,7 @@
         });
 
         $("body").append('<div id="yt_dialogs"/>');
-        $("#yt_dialogs").load(chrome.extension.getURL('html/dialogs.html'), function() {
+        $("#yt_dialogs").load(chrome.runtime.getURL('html/dialogs.html'), function() {
             $("#yteditorpro_help").modal({'show':false});
             $("#yteditorpro_changes").modal({'show':false});
             $("#yteditorpro_review").modal({'show':false});
